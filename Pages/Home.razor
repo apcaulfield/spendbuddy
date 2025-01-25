@@ -1,0 +1,19 @@
+﻿@page "/"
+@inject AccountService AccountService
+@inject NavigationManager NavManager
+
+@using SpendBuddy.Models
+
+<PageTitle>SpendBuddy</PageTitle>
+
+@code{
+    protected override void OnInitialized()
+    {
+        /* TODO: Check if AccountService contains valid credentials.
+        If it does when this page is accessed, the user has already signed in
+        and should be redirected elsewhere. */
+
+        // Redirect to /login
+        NavManager.NavigateTo("/login", forceLoad: true);
+    }
+}

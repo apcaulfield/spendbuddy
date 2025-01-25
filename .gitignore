@@ -1,0 +1,36 @@
+# Ignore build artifacts
+bin/
+obj/
+
+# Ignore user-specific settings
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.cache
+
+# Ignore compiled output and debug artifacts
+wwwroot/_framework/
+wwwroot/appsettings.json
+
+# Ignore compressed files
+*.gz
+
+# Ignore package management folders
+node_modules/
+
+#MacOS folder attributes
+.DS_Store
+
+#Visual Studio solution file
+*.sln
+
+#Intellij project settings
+*.idea
