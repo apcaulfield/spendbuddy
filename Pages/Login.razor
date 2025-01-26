@@ -4,21 +4,26 @@
 @using SpendBuddy.Models
 
 <div class="login-container">
-    <img src="logo.png" alt="Logo" />
-    <div class = "login-form">
-        <div class="form-group mb-1">
-            <label for="username">Username</label>
-            <InputText class="form-control" @bind-Value="userCredentials.Username" />
-        </div>
+    <div class="appear-animation">
+        <img src="logo.png" alt="Logo" />
+        <div class = "login-form">
+            <div class="form-group mb-1">
+                <label>Username</label>
+                <InputText class="form-control" @bind-Value="userCredentials.Username" />
+            </div>
 
-        <div class="form-group mb-2">
-            <label for="password">Password</label>
-            <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" />
-        </div>
+            <div class="form-group mb-2">
+                <label>Password</label>
+                <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" />
+            </div>
 
-        <div class="flex justify-between">
-            <button class="btn btn-primary" @onclick="OnLogin">Login</button>
-            <button class="btn btn-secondary" @onclick="OnSignUp">Sign Up</button>
+            <div class="flex justify-between">
+                <button class="btn btn-primary" @onclick="OnLogin">Login</button>
+                <button class="btn btn-secondary" @onclick="OnSignUp">Sign Up</button>
+            </div>
+            @if (!string.IsNullOrEmpty(errorMessage)){
+                <p>@errorMessage</p>
+            }
         </div>
     </div>
 </div>
@@ -27,18 +32,15 @@
 
     private User userCredentials = new User();
     private string errorMessage = "";
-    
-    private string Username { get; set; } = string.Empty;
-    private string Password { get; set; } = string.Empty;
 
-    private void OnLogin()
+    private async Task OnLogin()
     {
-        AccountService.RequestLogin(userCredentials);
+        await AccountService.RequestLogin(userCredentials);
     }
 
-    private void OnSignUp()
+    private async Task OnSignUp()
     {
-        AccountService.CreateUser(userCredentials);
+        await AccountService.CreateUser(userCredentials);
     }
 }
 
@@ -53,10 +55,21 @@
     }
 
     .login-form {
-        width: 50%; /* Takes up half the width of the screen */
         padding: 20px;
         border-radius: 8px; /* Optional: rounded corners */
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow */
         background: white;
+    }
+
+    @@keyframes pulse {
+        0% {transform: scale(1.2);
+        opacity: 0; }
+        100% {transform: scale(1); 
+        opacity 1; }
+    }
+
+    .appear-animation {
+        display: inline-block;
+        animation: pulse 1s ease-in-out 1;
     }
 </style>

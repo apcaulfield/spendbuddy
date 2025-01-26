@@ -23,13 +23,13 @@ namespace SpendBuddy.Services
         // Make a login attempt with the provided credentials
         public async Task RequestLogin(User loginCredentials)
         {
-            var response = _httpClient.PostAsJsonAsync("login", loginCredentials);
+            var response = await _httpClient.PostAsJsonAsync("login", loginCredentials);
         }
 
         // Attempt to add a new user to the database
         public async Task CreateUser(User newUser)
         {
-            var response = _httpClient.PostAsJsonAsync("addUser", newUser);
+            var response = await _httpClient.PostAsJsonAsync("addUser", newUser);
         }
     }
 }
