@@ -23,7 +23,7 @@ namespace SpendBuddy.Services
         // Fetch expenses from API
         public async Task FetchAllExpensesAsync()
         {
-            _expenses = await _httpClient.GetFromJsonAsync<List<Expense>>("expenses") ?? new List<Expense>();
+            _expenses = await _httpClient.GetFromJsonAsync<List<Expense>>("GetExpenses") ?? new List<Expense>();
         }
 
         // Add expense via API

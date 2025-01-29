@@ -1,5 +1,6 @@
 @page "/login"
 @inject AccountService AccountService
+@inject NavigationManager Navigation
 
 @using SpendBuddy.Models
 
@@ -35,12 +36,25 @@
 
     private async Task OnLogin()
     {
-        await AccountService.RequestLogin(userCredentials);
+        bool response = await AccountService.RequestLogin(userCredentials);
+        if (response == true){
+            Navigation.NavigateTo("/journal");
+        }
+        else{
+            errorMessage = AccountService.ErrorMessage;
+        }
     }
 
     private async Task OnSignUp()
     {
-        await AccountService.CreateUser(userCredentials);
+        bool response = await AccountService.CreateUser(userCredentials);
+        if (response == true){
+            //TODO: logic for transitioning to journal page
+            Navigation.NavigateTo("/journal");
+        }
+        else{
+            errorMessage = AccountService.ErrorMessage;
+        }
     }
 }
 
