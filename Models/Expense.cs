@@ -11,7 +11,7 @@ namespace SpendBuddy.Models
         
         public string Category {get; set; } = "";
 
-        public string Timestamp { get; set; }
+        public DateOnly Timestamp { get; set; }
 
         public string? Description { get; set; }
 

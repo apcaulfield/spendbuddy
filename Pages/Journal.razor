@@ -1,5 +1,5 @@
 ﻿@page "/journal"
-@inject ExpenseService ExpenseService
+@inject AccountService AccountService
 
 <PageTitle>Journal</PageTitle>
 
@@ -7,7 +7,7 @@
 
 <p>View, log, and modify expenses.</p>
 
-@if (ExpenseService.Expenses == null)
+@if (AccountService?.ExpenseService?.Expenses == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -25,7 +25,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var expense in ExpenseService.Expenses)
+            @foreach (var expense in AccountService.ExpenseService.Expenses)
             {
                 <tr>
                     <td>@expense.Expense_id</td>
@@ -44,6 +44,6 @@ else
 @code {
     protected override async Task OnInitializedAsync()
     {
-        await ExpenseService.FetchAllExpensesAsync();
+        await AccountService.ExpenseService.FetchAllExpensesAsync();
     }
 }

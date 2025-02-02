@@ -9,6 +9,8 @@ namespace SpendBuddy.Services
 {
     public class AccountService
     {
+        public ExpenseService ExpenseService { get; private set; }
+
         private readonly HttpClient _httpClient;
         public int UserID {get; private set; }
 
@@ -17,38 +19,7 @@ namespace SpendBuddy.Services
         public AccountService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-        }
-
-        // Make a login attempt with the provided credentials
-        public async Task<bool> RequestLogin(User loginCredentials)
-        {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync("login", loginCredentials);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadFromJsonAsync<LoginResponse>();
-                    if (responseContent != null){
-                        UserID = responseContent.ID;
-                        return true;
-                    }
-                    else{
-                        ErrorMessage = "No valid user ID was sent back from the server.";
-                    }
-                }
-                else
-                {
-
-                    ErrorMessage = $"Login failed: {response.ReasonPhrase}";
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                ErrorMessage = $"An error occurred during login: {ex.Message}";
-                return false;
-            }
+            ExpenseService = new ExpenseService(httpClient);
         }
 
         // Attempt to add a new user to the database
@@ -81,6 +52,38 @@ namespace SpendBuddy.Services
             catch (Exception ex)
             {
                 ErrorMessage = $"An error occurred while creating the account: {ex.Message}";
+                return false;
+            }
+        }
+
+        // Make a login attempt with the provided credentials
+        public async Task<bool> RequestLogin(User loginCredentials)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("login", loginCredentials);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                    if (responseContent != null){
+                        UserID = responseContent.ID;
+                        return true;
+                    }
+                    else{
+                        ErrorMessage = "No valid user ID was sent back from the server.";
+                    }
+                }
+                else
+                {
+
+                    ErrorMessage = $"Login failed: {response.ReasonPhrase}";
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"An error occurred during login: {ex.Message}";
                 return false;
             }
         }

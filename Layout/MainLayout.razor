@@ -1,16 +1,154 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+@inject AccountService AccountService
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+@using SpendBuddy.Models
+
+<div class="layout-container">
+
+    <!-- Sidebar -->
+    <nav class="sidebar @(isSidebarCollapsed ? "collapsed" : "")">
+        <div class="sidebar-header">
+            <h3>SpendBuddy</h3>
         </div>
+        <EditForm class="m-2" Model="newExpense" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-        <article class="content px-4">
+            <div>
+                <label>Amount:</label>
+                <InputNumber @bind-Value="newExpense.Amount" class="form-control" />
+                <ValidationMessage For="() => newExpense.Amount" />
+            </div>
+            
+            <div>
+                <label>Name:</label>
+                <InputText @bind-Value="newExpense.Name" class="form-control" />
+                <ValidationMessage For="() => newExpense.Name" />
+            </div>
+
+            <div>
+                <label>Category:</label>
+                <InputText @bind-Value="newExpense.Category" class="form-control" />
+                <ValidationMessage For="() => newExpense.Category" />
+            </div>
+
+            <div>
+                <label>Date:</label>
+                <InputDate @bind-Value="newExpense.Timestamp" class="form-control" />
+                <ValidationMessage For="() => newExpense.Timestamp" />
+            </div>
+
+            <div>
+                <label>Description:</label>
+                <InputTextArea @bind-Value="newExpense.Description" class="form-control" />
+                <ValidationMessage For="() => newExpense.Description" />
+            </div>
+
+            <div>
+                <label>Notes:</label>
+                <InputTextArea @bind-Value="newExpense.Notes" class="form-control" />
+                <ValidationMessage For="() => newExpense.Notes" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </EditForm>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="main-header">
+            <button @onclick="ToggleSidebar">
+                <span class="hamburger-icon">&#9776;</span>
+            </button>
+        </header>
+        
+        <section class="content-body">
             @Body
-        </article>
-    </main>
+        </section>
+    </div>
 </div>
+
+@code {
+    private bool isSidebarCollapsed = false;
+    private Expense newExpense = new Expense();
+
+    private void ToggleSidebar()
+    {
+        isSidebarCollapsed = !isSidebarCollapsed;
+    }
+
+    private void HandleValidSubmit(){
+        ;
+    }
+}
+
+<style>
+    .layout-container {
+        display: flex;
+        flex-direction: row;
+        height: 100vh; /* Optional full-page height */
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+        background: linear-gradient(to right, #c94b4b, #4b134f);
+        color: white;
+        width: 250px;               /* Normal width */
+        transition: width 0.3s;     /* Smooth transition */
+        overflow-x: hidden;         /* Hide horizontal scrollbar when collapsed */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-header {
+        padding: 1rem;
+        text-align: center;
+        border-bottom: 1px solid #444;
+    }
+
+    .sidebar-menu {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .sidebar-menu li {
+        padding: 0.75rem 1rem;
+    }
+
+    .sidebar-menu li a {
+        color: #ccc;
+        text-decoration: none;
+    }
+
+    .sidebar-menu li a:hover {
+        color: #fff;
+    }
+
+    /* Collapsed Sidebar */
+    .sidebar.collapsed {
+        width: 0px; /* Smaller collapsed width */
+    }
+
+    /* Main Content */
+    .main-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .main-header {
+        background-color: #f2f2f2;
+        padding: 1rem;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+
+    .content-body {
+        padding: 1rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+</style>
+

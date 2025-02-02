@@ -11,7 +11,6 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
-builder.Services.AddScoped(sp => new ExpenseService(sp.GetRequiredService<HttpClient>()));
 builder.Services.AddScoped(sp => new AccountService(sp.GetRequiredService<HttpClient>()));
 
 await builder.Build().RunAsync();
