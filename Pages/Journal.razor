@@ -2,6 +2,8 @@
 @inject AccountService AccountService
 @inject ExpenseService ExpenseService
 
+@layout MainLayout
+
 <PageTitle>Journal</PageTitle>
 
 <h1>Journal</h1>
@@ -28,6 +30,12 @@ else
         <tbody>
             @foreach (var expense in ExpenseService.Expenses)
             {
+                if (ExpenseService.mostRecentTimestamp == null || expense.Timestamp != ExpenseService.mostRecentTimestamp){
+                    <tr>
+                        <td colspan="6"><strong>@expense.Timestamp.ToString("MM/dd/yyyy")</strong></td>
+                    </tr>
+                    ExpenseService.mostRecentTimestamp = expense.Timestamp;
+                }
                 <tr>
                     <td>@expense.ExpenseID</td>
                     <td>$@expense.Amount</td>

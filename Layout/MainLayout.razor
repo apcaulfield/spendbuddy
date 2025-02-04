@@ -15,7 +15,6 @@
         </div>
         <EditForm class="m-2" Model="newExpense" OnValidSubmit="SubmitExpense">
             <DataAnnotationsValidator />
-            <ValidationSummary />
 
             <div>
                 <label>Amount:</label>
@@ -77,7 +76,7 @@
 
 @code {
     private bool isSidebarCollapsed = false;
-    private Expense newExpense;
+    private Expense? newExpense;
 
     private string message = "placeholder";
 

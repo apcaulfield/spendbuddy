@@ -31,7 +31,7 @@
                     <button class="btn btn-secondary" @onclick="OnSignUp">Sign Up</button>
                 </div>
                 @if (!string.IsNullOrEmpty(errorMessage)){
-                    <p>@errorMessage</p>
+                    <div class="mt-1">@errorMessage</div>
                 }
             }
         </div>

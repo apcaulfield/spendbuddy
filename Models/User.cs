@@ -10,7 +10,7 @@ namespace SpendBuddy.Models
     // Class for parsing HTTP responses of this format
     public class IDResponse
     {
-        public int ID {get; set; }
-        public string Message {get; set; }
+        public required int ID {get; set; }
+        public required string Message {get; set; }
     }
 }
