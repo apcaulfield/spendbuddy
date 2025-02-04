@@ -2,13 +2,15 @@ namespace SpendBuddy.Models
 {
     public class User
     {
-        public int? Id {get; set; }
+        public int? ID {get; set; }
         public string Username {get; set; } = "";
         public string Password {get; set; } = "";
     }
 
-    public class LoginResponse
+    // Class for parsing HTTP responses of this format
+    public class IDResponse
     {
         public int ID {get; set; }
+        public string Message {get; set; }
     }
 }

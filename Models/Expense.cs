@@ -2,8 +2,8 @@ namespace SpendBuddy.Models
 {
     public class Expense
     {
-        public int? Expense_id {get; set; }
-        public int? User_id {get; set; }
+        public int? ExpenseID {get; set; }
+        public int? UserID {get; set; }
 
         public float Amount {get; set; } = 0;
 
@@ -11,7 +11,7 @@ namespace SpendBuddy.Models
         
         public string Category {get; set; } = "";
 
-        public DateOnly Timestamp { get; set; }
+        public DateOnly Timestamp { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
         public string? Description { get; set; }
 

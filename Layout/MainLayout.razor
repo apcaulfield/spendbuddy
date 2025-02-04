@@ -1,5 +1,8 @@
 ﻿@inherits LayoutComponentBase
 @inject AccountService AccountService
+@inject ExpenseService ExpenseService
+
+@using System.Text.Json
 
 @using SpendBuddy.Models
 
@@ -10,13 +13,16 @@
         <div class="sidebar-header">
             <h3>SpendBuddy</h3>
         </div>
-        <EditForm class="m-2" Model="newExpense" OnValidSubmit="HandleValidSubmit">
+        <EditForm class="m-2" Model="newExpense" OnValidSubmit="SubmitExpense">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
             <div>
                 <label>Amount:</label>
-                <InputNumber @bind-Value="newExpense.Amount" class="form-control" />
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <InputNumber @bind-Value="newExpense.Amount" class="form-control" step="0.01"/>
+                </div>
                 <ValidationMessage For="() => newExpense.Amount" />
             </div>
             
@@ -50,8 +56,9 @@
                 <ValidationMessage For="() => newExpense.Notes" />
             </div>
 
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary mt-2 w-100">Add Expense</button>
         </EditForm>
+        <div>@message</div>
     </nav>
 
     <!-- Main Content -->
@@ -70,15 +77,23 @@
 
 @code {
     private bool isSidebarCollapsed = false;
-    private Expense newExpense = new Expense();
+    private Expense newExpense;
+
+    private string message = "placeholder";
+
+    protected override void OnInitialized(){
+        newExpense = new Expense { UserID = AccountService.UserID };
+    }
 
     private void ToggleSidebar()
     {
         isSidebarCollapsed = !isSidebarCollapsed;
     }
 
-    private void HandleValidSubmit(){
-        ;
+    private async Task SubmitExpense(){
+        var newExpenseID = await ExpenseService.AddExpenseAsync(newExpense);
+        message = "Expense successfully added!";
+        newExpense = new Expense { UserID = AccountService.UserID };
     }
 }
 
@@ -86,16 +101,15 @@
     .layout-container {
         display: flex;
         flex-direction: row;
-        height: 100vh; /* Optional full-page height */
+        height: 100vh;
     }
 
     /* Sidebar Styles */
     .sidebar {
-        background: linear-gradient(to right, #c94b4b, #4b134f);
+        background-color: #301934;
         color: white;
-        width: 250px;               /* Normal width */
-        transition: width 0.3s;     /* Smooth transition */
-        overflow-x: hidden;         /* Hide horizontal scrollbar when collapsed */
+        width: 250px;
+        transition: width 0.3s;
         display: flex;
         flex-direction: column;
     }
@@ -127,7 +141,14 @@
 
     /* Collapsed Sidebar */
     .sidebar.collapsed {
-        width: 0px; /* Smaller collapsed width */
+        width: 0px;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    /* Child elements in sidebar */
+    .sidebar.collapsed * {
+        display: none;
     }
 
     /* Main Content */

@@ -9,8 +9,6 @@ namespace SpendBuddy.Services
 {
     public class AccountService
     {
-        public ExpenseService ExpenseService { get; private set; }
-
         private readonly HttpClient _httpClient;
         public int UserID {get; private set; }
 
@@ -19,7 +17,6 @@ namespace SpendBuddy.Services
         public AccountService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            ExpenseService = new ExpenseService(httpClient);
         }
 
         // Attempt to add a new user to the database
@@ -31,7 +28,7 @@ namespace SpendBuddy.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var responseContent = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                    var responseContent = await response.Content.ReadFromJsonAsync<IDResponse>();
                     if (responseContent != null)
                     {
                         UserID = responseContent.ID;
@@ -65,7 +62,7 @@ namespace SpendBuddy.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var responseContent = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                    var responseContent = await response.Content.ReadFromJsonAsync<IDResponse>();
                     if (responseContent != null){
                         UserID = responseContent.ID;
                         return true;
