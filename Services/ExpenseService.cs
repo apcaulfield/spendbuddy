@@ -56,8 +56,9 @@ namespace SpendBuddy.Services
             if (responseObject?.ID == null || responseObject?.ID == 0){
                 throw new Exception("No ID was returned after adding expense.");
             }
-
             expense.ExpenseID = responseObject.ID;
+            
+            // Perform binary search if adding an expense from a previous day
             if (expense.Timestamp != DateOnly.FromDateTime(DateTime.Today))
             {
                 int insertIndex = _expenses.BinarySearch(expense, new ExpenseTimestampComparer());

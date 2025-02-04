@@ -13,10 +13,10 @@
         <div class="sidebar-header">
             <h3>SpendBuddy</h3>
         </div>
-        <EditForm class="m-2" Model="newExpense" OnValidSubmit="SubmitExpense">
+        <EditForm class="m-3" Model="newExpense" OnValidSubmit="SubmitExpense">
             <DataAnnotationsValidator />
 
-            <div>
+            <div class="mb-2">
                 <label>Amount:</label>
                 <div class="input-group">
                     <span class="input-group-text">$</span>
@@ -25,31 +25,31 @@
                 <ValidationMessage For="() => newExpense.Amount" />
             </div>
             
-            <div>
+            <div class="mb-2">
                 <label>Name:</label>
                 <InputText @bind-Value="newExpense.Name" class="form-control" />
                 <ValidationMessage For="() => newExpense.Name" />
             </div>
 
-            <div>
+            <div class="mb-2">
                 <label>Category:</label>
                 <InputText @bind-Value="newExpense.Category" class="form-control" />
                 <ValidationMessage For="() => newExpense.Category" />
             </div>
 
-            <div>
+            <div class="mb-2">
                 <label>Date:</label>
                 <InputDate @bind-Value="newExpense.Timestamp" class="form-control" />
                 <ValidationMessage For="() => newExpense.Timestamp" />
             </div>
 
-            <div>
+            <div class="mb-2">
                 <label>Description:</label>
                 <InputTextArea @bind-Value="newExpense.Description" class="form-control" />
                 <ValidationMessage For="() => newExpense.Description" />
             </div>
 
-            <div>
+            <div class="mb-2">
                 <label>Notes:</label>
                 <InputTextArea @bind-Value="newExpense.Notes" class="form-control" />
                 <ValidationMessage For="() => newExpense.Notes" />

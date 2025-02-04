@@ -16,37 +16,38 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Amount</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Description</th>
-                <th>Notes</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var expense in ExpenseService.Expenses)
+<table class="table w-full">
+    <thead>
+        <tr>
+            <th class="border">Amount</th>
+            <th class="border">Name</th>
+            <th class="border">Category</th>
+            <th class="border">Description</th>
+            <th class="border">Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var expense in ExpenseService.Expenses)
+        {
+            if (ExpenseService.mostRecentTimestamp == null || expense.Timestamp != ExpenseService.mostRecentTimestamp)
             {
-                if (ExpenseService.mostRecentTimestamp == null || expense.Timestamp != ExpenseService.mostRecentTimestamp){
-                    <tr>
-                        <td colspan="6"><strong>@expense.Timestamp.ToString("MM/dd/yyyy")</strong></td>
-                    </tr>
-                    ExpenseService.mostRecentTimestamp = expense.Timestamp;
-                }
-                <tr>
-                    <td>@expense.ExpenseID</td>
-                    <td>$@expense.Amount</td>
-                    <td>@expense.Name</td>
-                    <td>@expense.Category</td>
-                    <td>@expense.Description</td>
-                    <td>@expense.Notes</td>
+                <tr class="date-row">
+                    <td colspan="6" class="font-bold">
+                        @expense.Timestamp.ToString("MM/dd/yyyy")
+                    </td>
                 </tr>
+                ExpenseService.mostRecentTimestamp = expense.Timestamp;
             }
-        </tbody>
-    </table>
+            <tr>
+                <td class="border">$@expense.Amount.ToString("F2")</td>
+                <td class="border">@expense.Name</td>
+                <td class="border">@expense.Category</td>
+                <td class="border">@expense.Description</td>
+                <td class="border">@expense.Notes</td>
+            </tr>
+        }
+    </tbody>
+</table>
 }
 
 @code {
@@ -60,3 +61,10 @@ else
         InvokeAsync(StateHasChanged);
     }
 }
+
+<style>
+    .date-row {
+        background-color: #e5e7eb;
+        font-weight: bold;
+    }
+</style>

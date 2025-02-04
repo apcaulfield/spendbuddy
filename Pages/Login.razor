@@ -6,7 +6,7 @@
 @using SpendBuddy.Models
 
 <div class="login-container">
-    <div class="appear-animation">
+    <div class="@animationClass">
         <img src="logo.png" alt="Logo" />
         <div class = "login-form">
             @if (isLoading){
@@ -18,12 +18,12 @@
             else{
                 <div class="form-group mb-1">
                     <label>Username</label>
-                    <InputText class="form-control" @bind-Value="userCredentials.Username" />
+                    <InputText class="form-control" @bind-Value="userCredentials.Username" @onfocus="StopRepeatingPulse" />
                 </div>
 
                 <div class="form-group mb-2">
                     <label>Password</label>
-                    <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" />
+                    <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" @onfocus="StopRepeatingPulse" />
                 </div>
 
                 <div class="flex justify-between">
@@ -42,6 +42,14 @@
     private User userCredentials = new User();
     private string errorMessage = "";
     private bool isLoading = false;
+
+    private string animationClass = "repeating-pulse";
+
+    private void StopRepeatingPulse()
+    {
+        // 1) Pause the animation immediately
+        animationClass = "repeating-pulse paused-pulse";
+    }
 
     private async Task OnLogin()
     {
@@ -92,16 +100,16 @@
     .login-container {
         display: flex;
         flex-direction: column;
-        justify-content: center; /* Centers horizontally */
-        align-items: center; /* Centers vertically */
-        height: 100vh; /* Full viewport height */
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
         background: linear-gradient(to right, #c94b4b, #4b134f);
     }
 
     .login-form {
         padding: 20px;
-        border-radius: 8px; /* Optional: rounded corners */
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Optional: subtle shadow */
+        border-radius: 8px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         background: white;
     }
 
@@ -126,15 +134,17 @@
         100% { transform: rotate(360deg); }
     }
 
-    @@keyframes pulse {
-        0% {transform: scale(1.2);
-        opacity: 0; }
-        100% {transform: scale(1); 
-        opacity 1; }
+    .repeating-pulse {
+        animation: repeating-pulse 5s ease-in-out infinite;
     }
 
-    .appear-animation {
-        display: inline-block;
-        animation: pulse 1s ease-in-out 1;
+    .paused-pulse {
+        animation-play-state: paused !important;
+    }
+
+    @@keyframes repeating-pulse {
+        0%   { transform: scale(1);   }
+        50%  { transform: scale(1.05); }
+        100% { transform: scale(1);   }
     }
 </style>
