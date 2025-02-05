@@ -6,55 +6,53 @@
 @using SpendBuddy.Models
 
 <div class="login-container">
-    <div class="@animationClass">
-        <img src="logo.png" alt="Logo" />
-        <div class = "login-form">
-            @if (isLoading){
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <div>Logging in...</div>
-                </div>
-            }
-            else{
-                <div class="form-group mb-1">
-                    <label>Username</label>
-                    <InputText class="form-control" @bind-Value="userCredentials.Username" @onfocus="StopRepeatingPulse" />
-                </div>
+    <img src="logo.png" alt="Logo" />
+    <div class = "login-form">
+        @if (!string.IsNullOrEmpty(loadingText)){
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <div>@loadingText</div>
+            </div>
+        }
+        else{
+            <div class="form-group mb-1">
+                <label>Username</label>
+                <InputText class="form-control" @bind-Value="userCredentials.Username" @onfocus="StopRepeatingPulse" />
+            </div>
 
-                <div class="form-group mb-2">
-                    <label>Password</label>
-                    <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" @onfocus="StopRepeatingPulse" />
-                </div>
+            <div class="form-group mb-3">
+                <label>Password</label>
+                <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" @onfocus="StopRepeatingPulse" />
+            </div>
 
-                <div class="flex justify-between">
-                    <button class="btn btn-primary" @onclick="OnLogin">Login</button>
-                    <button class="btn btn-secondary" @onclick="OnSignUp">Sign Up</button>
-                </div>
-                @if (!string.IsNullOrEmpty(errorMessage)){
-                    <div class="mt-1">@errorMessage</div>
-                }
+            <div class="flex justify-between">
+                <button class="btn btn-primary" @onclick="OnLogin">Login</button>
+                <button class="btn btn-secondary" @onclick="OnSignUp">Sign Up</button>
+            </div>
+            @if (!string.IsNullOrEmpty(errorMessage)){
+                <div class="mt-1">@errorMessage</div>
             }
-        </div>
+        }
     </div>
 </div>
 
 @code {
     private User userCredentials = new User();
     private string errorMessage = "";
-    private bool isLoading = false;
+    private string loadingText;
 
     private string animationClass = "repeating-pulse";
 
+    // Called when the user interacts with the page to stop animation
     private void StopRepeatingPulse()
     {
-        // 1) Pause the animation immediately
         animationClass = "repeating-pulse paused-pulse";
     }
 
     private async Task OnLogin()
     {
         errorMessage = "";
-        isLoading = true;
+        loadingText = "Logging in...";
         try
         {
             bool response = await AccountService.RequestLogin(userCredentials);
@@ -69,14 +67,14 @@
         }
         finally
         {
-            isLoading = false;
+            loadingText = "";
         }
     }
 
     private async Task OnSignUp()
     {
         errorMessage = "";
-        isLoading = true;
+        loadingText = "Creating account...";
         try
         {
             bool response = await AccountService.CreateUser(userCredentials);
@@ -91,7 +89,7 @@
         }
         finally
         {
-            isLoading = false;
+            loadingText = "";
         }
     }
 }
@@ -108,9 +106,9 @@
 
     .login-form {
         padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 16px;
         background: white;
+        width: 40vw;
     }
 
     .loading-spinner {
@@ -132,19 +130,5 @@
     @@keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
-    }
-
-    .repeating-pulse {
-        animation: repeating-pulse 5s ease-in-out infinite;
-    }
-
-    .paused-pulse {
-        animation-play-state: paused !important;
-    }
-
-    @@keyframes repeating-pulse {
-        0%   { transform: scale(1);   }
-        50%  { transform: scale(1.05); }
-        100% { transform: scale(1);   }
     }
 </style>

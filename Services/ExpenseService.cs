@@ -14,7 +14,7 @@ namespace SpendBuddy.Services
         private List<Expense> _expenses = new();
         public IReadOnlyList<Expense> Expenses => _expenses;
 
-        // Used to keep track of whether or not a new expense should be added to the front of the list or not.
+        // Used to keep track of where dates should be placed in the journal.
         public DateOnly? mostRecentTimestamp;
 
         private readonly HttpClient _httpClient;
@@ -80,6 +80,8 @@ namespace SpendBuddy.Services
             else{
                 _expenses.Insert(0, expense);
             }
+
+            mostRecentTimestamp = null;
 
             // Refresh pages
             OnExpensesUpdated?.Invoke();
