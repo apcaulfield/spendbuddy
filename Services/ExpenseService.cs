@@ -14,6 +14,8 @@ namespace SpendBuddy.Services
         private List<Expense> _expenses = new();
         public IReadOnlyList<Expense> Expenses => _expenses;
 
+        public HashSet<string> Tags {get; set; } = new(); 
+
         // Used to keep track of where dates should be placed in the journal.
         public DateOnly? mostRecentTimestamp;
 

@@ -3,61 +3,62 @@
 @inject ExpenseService ExpenseService
 
 @using System.Text.Json
+@using System.Text.RegularExpressions
 
 @using SpendBuddy.Models
 
 <div class="layout-container">
-
     <!-- Sidebar -->
     <nav class="sidebar @(isSidebarCollapsed ? "collapsed" : "")">
         <div class="sidebar-header">
-            <h3>SpendBuddy</h3>
+            <h3>Add Expense</h3>
         </div>
-        <EditForm class="m-3" Model="newExpense" OnValidSubmit="SubmitExpense">
-            <DataAnnotationsValidator />
-
-            <div class="mb-2">
-                <label>Amount:</label>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <InputNumber @bind-Value="newExpense.Amount" class="form-control" step="0.01"/>
-                </div>
-                <ValidationMessage For="() => newExpense.Amount" />
+        <div class="mx-3 my-1">
+            <label>Amount:</label>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <InputNumber @bind-Value="newExpense.Amount" class="form-control" step="0.01"/>
             </div>
-            
-            <div class="mb-2">
-                <label>Name:</label>
-                <InputText @bind-Value="newExpense.Name" class="form-control" />
-                <ValidationMessage For="() => newExpense.Name" />
-            </div>
+        </div>
+        
+        <div class="mx-3 my-1">
+            <label>Name:</label>
+            <InputText @bind-Value="newExpense.Name" class="form-control" />
+        </div>
 
-            <div class="mb-2">
-                <label>Category:</label>
-                <InputText @bind-Value="newExpense.Category" class="form-control" />
-                <ValidationMessage For="() => newExpense.Category" />
-            </div>
+        <div class="mx-3 my-1">
+            <label>Category:</label>
+            <InputText @bind-Value="newExpense.Category" class="form-control" />
+        </div>
 
-            <div class="mb-2">
-                <label>Date:</label>
-                <InputDate @bind-Value="newExpense.Timestamp" class="form-control" />
-                <ValidationMessage For="() => newExpense.Timestamp" />
+        <div class="mx-3 my-1">
+            <label>Add Tags:</label>
+            <InputText @bind-Value="NewTag" class="form-control" @onkeyup="TagInputKeyPress" maxlength="50"/>
+        </div>
+        
+        @if (newExpense.Tags.Count > 0)
+        {
+            <div class="tag-container mx-3 my-1">
+                @foreach (string tag in newExpense.Tags.ToList())
+                {
+                    <div class="tag">
+                        @tag <span class="close-btn" @onclick="() => newExpense.Tags.Remove(tag)">&times;</span>
+                    </div>
+                }
             </div>
+        }
 
-            <div class="mb-2">
-                <label>Description:</label>
-                <InputTextArea @bind-Value="newExpense.Description" class="form-control" />
-                <ValidationMessage For="() => newExpense.Description" />
-            </div>
+        <div class="mx-3 my-1">
+            <label>Notes:</label>
+            <InputTextArea @bind-Value="newExpense.Notes" class="form-control" style="height: 180px;"/>
+        </div>
 
-            <div class="mb-2">
-                <label>Notes:</label>
-                <InputTextArea @bind-Value="newExpense.Notes" class="form-control" />
-                <ValidationMessage For="() => newExpense.Notes" />
-            </div>
-
-            <button type="submit" class="btn btn-primary mt-2 w-100">Add Expense</button>
-        </EditForm>
-        <div>@message</div>
+        <div class="mx-3 my-1">
+            <label>Date:</label>
+            <InputDate @bind-Value="newExpense.Timestamp" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-primary mx-3 my-2">Add Expense</button>
+        <div class="mx-3 my-1">@message</div>
     </nav>
 
     <!-- Main Content -->
@@ -75,8 +76,11 @@
 </div>
 
 @code {
+    private bool pressedEnter = false;
     private bool isSidebarCollapsed = false;
     private Expense? newExpense;
+
+    public string NewTag {get; set; }
 
     private string message = "placeholder";
 
@@ -90,9 +94,49 @@
     }
 
     private async Task SubmitExpense(){
+        if (pressedEnter){
+            return;
+        }
         var newExpenseID = await ExpenseService.AddExpenseAsync(newExpense);
         message = "Expense successfully added!";
         newExpense = new Expense { UserID = AccountService.UserID };
+    }
+
+    private void TagInputKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddNewTag();
+        }
+    }
+
+    private void AddNewTag(){
+        Console.WriteLine(NewTag);
+
+        if (!string.IsNullOrWhiteSpace(NewTag)){
+
+            // Removes whitespace from beginning and end of string
+            NewTag = NewTag.Trim();
+
+            // Removes all consecutive occurences of whitespace characters inside of string
+            NewTag = Regex.Replace(NewTag, @"\s{2,}", " ");
+
+            if (!Regex.IsMatch(NewTag, "^[a-zA-Z0-9 ]+$")){
+                message = "Special characters not allowed in tags.";
+                return;
+            }
+
+            if (newExpense.Tags.Add(NewTag)){
+                message = $"Tag {NewTag} applied.";
+                NewTag = "";
+            }
+            else{
+                message = "Tag already applied!";
+            }
+        }
+        else{
+            message = "Tag cannot be empty!";
+        }
     }
 }
 
@@ -107,7 +151,7 @@
     .sidebar {
         background-color: #301934;
         color: white;
-        width: 250px;
+        width: 300px;
         transition: width 0.3s;
         display: flex;
         flex-direction: column;
@@ -170,5 +214,46 @@
         flex: 1;
     }
 
-</style>
+    .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+        max-height: 130px; /* Adjust this height based on your needs */
+        overflow-y: auto; /* Enables vertical scrolling if content overflows */
+        overflow-x: hidden; /* Prevents horizontal overflow */
+    }
 
+    .tag {
+        background: rgba(255, 255, 255, 0.3); /* White with 30% opacity */
+        backdrop-filter: blur(10px);
+        border-radius: 15px; /* Rounded corners */
+        padding: 6px 15px;
+        color: white;
+        width: auto;
+        text-align: center;
+        margin: 2px;
+        align-items: center; /* Vertically center */
+        gap: 6px; /* Space between text and close button */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 250px;
+    }
+
+    .close-btn {
+        font-size: 16px;
+        cursor: pointer;
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 35%;
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .close-btn:hover{
+        background: rgba(255, 255, 255, 0.5); /* Lit up background */
+    }
+
+</style>

@@ -20,7 +20,7 @@ namespace SpendBuddy.Models
 
         public DateOnly Timestamp { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
-        public string? Description { get; set; }
+        public HashSet<string> Tags { get; set; } = new();
 
         public string? Notes { get; set; }
 
