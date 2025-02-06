@@ -29,11 +29,14 @@
                 <button class="btn btn-primary" @onclick="OnLogin">Login</button>
                 <button class="btn btn-secondary" @onclick="OnSignUp">Sign Up</button>
             </div>
-            @if (!string.IsNullOrEmpty(errorMessage)){
-                <div class="mt-1">@errorMessage</div>
-            }
         }
     </div>
+    @if (!string.IsNullOrEmpty(errorMessage)){
+        <div class="alert alert-warning mt-3 p-3" role="alert">
+            <strong>Error - </strong>@errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage=string.Empty"></button>
+        </div>
+    }
 </div>
 
 @code {
@@ -130,5 +133,9 @@
     @@keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
+    }
+
+    .alert {
+        border-radius: 1.5rem !important; /* Adjust as needed */
     }
 </style>

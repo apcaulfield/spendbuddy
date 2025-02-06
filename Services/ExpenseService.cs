@@ -2,8 +2,9 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SpendBuddy.Models;
+using System.Collections.ObjectModel;
 using System.Text.Json;
+using SpendBuddy.Models;
 
 namespace SpendBuddy.Services
 {
@@ -14,7 +15,15 @@ namespace SpendBuddy.Services
         private List<Expense> _expenses = new();
         public IReadOnlyList<Expense> Expenses => _expenses;
 
+        // Retrieve the entire category table
+        private Dictionary<string, int> _categories = new Dictionary<string, int>();
+        public ReadOnlyDictionary<string, int> Categories { get; }
+
+        // Retrieve the entire tags table (for autofill)
         public HashSet<string> Tags {get; set; } = new(); 
+
+        // List of expense-tag pairs for the expenses that are currently in view
+        private List<List<int>> expenseTagPairs = new List<List<int>>();
 
         // Used to keep track of where dates should be placed in the journal.
         public DateOnly? mostRecentTimestamp;

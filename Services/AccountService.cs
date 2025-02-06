@@ -42,7 +42,7 @@ namespace SpendBuddy.Services
                 }
                 else
                 {
-                    ErrorMessage = "Validating user creation failed.";
+                    ErrorMessage = "Account with username already exists.";
                 }
                 return false;
             }
@@ -74,7 +74,7 @@ namespace SpendBuddy.Services
                 else
                 {
 
-                    ErrorMessage = $"Login failed: {response.ReasonPhrase}";
+                    ErrorMessage = "Invalid username or password.";
                 }
                 return false;
             }
