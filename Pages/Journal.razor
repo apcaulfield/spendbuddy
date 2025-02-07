@@ -41,8 +41,14 @@ else
             <tr>
                 <td class="border">$@expense.Amount.ToString("F2")</td>
                 <td class="border">@expense.Name</td>
-                <td class="border">@expense.Category</td>
-                <td class="border">@expense.Tags</td>
+                <td class="border">@expense.CategoryID</td>
+                <td class="border">
+                    @foreach (string tag in expense.Tags){
+                        <div>
+                            @tag <span class="close-btn">&times;</span>
+                        </div>
+                    }
+                </td>
                 <td class="border">@expense.Notes</td>
             </tr>
         }

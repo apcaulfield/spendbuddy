@@ -28,7 +28,7 @@
 
         <div class="mx-3 my-1">
             <label>Category:</label>
-            <InputText @bind-Value="newExpense.Category" class="form-control" />
+            <InputText @bind-Value="NewCategory" class="form-control" />
         </div>
 
         <div class="mx-3 my-1">
@@ -42,7 +42,7 @@
                 @foreach (string tag in newExpense.Tags.ToList())
                 {
                     <div class="tag">
-                        @tag <span class="close-btn" @onclick="() => newExpense.Tags.Remove(tag)">&times;</span>
+                        @tag <span class="btn-close" @onclick="() => newExpense.Tags.Remove(tag)"></span>
                     </div>
                 }
             </div>
@@ -57,7 +57,7 @@
             <label>Date:</label>
             <InputDate @bind-Value="newExpense.Timestamp" class="form-control" />
         </div>
-        <button type="submit" class="btn btn-primary mx-3 my-2">Add Expense</button>
+        <button type="submit" class="btn btn-primary mx-3 my-2" @onclick="SubmitExpense">Add Expense</button>
         <div class="mx-3 my-1">@message</div>
     </nav>
 
@@ -81,6 +81,7 @@
     private Expense? newExpense;
 
     public string NewTag {get; set; }
+    public string NewCategory {get; set; }
 
     private string message = "placeholder";
 
@@ -239,21 +240,8 @@
         max-width: 250px;
     }
 
-    .close-btn {
-        font-size: 16px;
-        cursor: pointer;
-        color: white;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 35%;
-        width: 20px;
-        height: 20px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    .tag .btn-close {
+        margin-left: 8px;
+        filter: invert(1); /* Makes the close button white */
     }
-
-    .close-btn:hover{
-        background: rgba(255, 255, 255, 0.5); /* Lit up background */
-    }
-
 </style>

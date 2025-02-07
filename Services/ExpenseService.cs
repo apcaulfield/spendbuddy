@@ -10,20 +10,23 @@ namespace SpendBuddy.Services
 {
     public class ExpenseService
     {
+        // Contains both the expenses and a set of their tags
+        public GetExpensesResponse ExpensesAndTags {get; private set; } = new();
+
         /* readonly: prevents reassignment of _expenses.
         IReadOnlyList: hides modification methods from other classes. */
         private List<Expense> _expenses = new();
         public IReadOnlyList<Expense> Expenses => _expenses;
 
         // Retrieve the entire category table
-        private Dictionary<string, int> _categories = new Dictionary<string, int>();
-        public ReadOnlyDictionary<string, int> Categories { get; }
+        private Dictionary<int, string> _categories = new Dictionary<int, string>();
+        public ReadOnlyDictionary<int, string> Categories { get; }
 
         // Retrieve the entire tags table (for autofill)
         public HashSet<string> Tags {get; set; } = new(); 
 
         // List of expense-tag pairs for the expenses that are currently in view
-        private List<List<int>> expenseTagPairs = new List<List<int>>();
+        private HashSet<Tuple<int, int>> _expenseTagPairs = new HashSet<Tuple<int, int>>();
 
         // Used to keep track of where dates should be placed in the journal.
         public DateOnly? mostRecentTimestamp;
@@ -44,7 +47,9 @@ namespace SpendBuddy.Services
             string url = "GetExpenses?" +
             $"userID={userID}" +
             $"&page={pageIndex}";
-            _expenses = await _httpClient.GetFromJsonAsync<List<Expense>>(url) ?? new List<Expense>();
+            ExpensesAndTags = await _httpClient.GetFromJsonAsync<GetExpensesResponse>(url) ?? new GetExpensesResponse();
+            _expenses = ExpensesAndTags.Expenses;
+            _expenseTagPairs = ExpensesAndTags.ExpenseTagPairs;
         }
 
         // Add expense via API

@@ -16,7 +16,7 @@ namespace SpendBuddy.Models
         public string Name {get; set; } = "";
         
         [Required(ErrorMessage = "Category is required.")]
-        public string Category {get; set; } = "";
+        public int CategoryID {get; set; }
 
         public DateOnly Timestamp { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
@@ -35,5 +35,12 @@ namespace SpendBuddy.Models
                 );
             }
         }
+    }
+
+    // Wrapper class to handle GetExpenses API response
+    public class GetExpensesResponse
+    {
+        public List<Expense> Expenses { get; set; }
+        public HashSet<Tuple<int, int>> ExpenseTagPairs { get; set; }
     }
 }
