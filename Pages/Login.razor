@@ -17,12 +17,12 @@
         else{
             <div class="form-group mb-1">
                 <label>Username</label>
-                <InputText class="form-control" @bind-Value="userCredentials.Username" @onfocus="StopRepeatingPulse" />
+                <InputText class="form-control" @bind-Value="userCredentials.Username" />
             </div>
 
             <div class="form-group mb-3">
                 <label>Password</label>
-                <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" @onfocus="StopRepeatingPulse" />
+                <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" />
             </div>
 
             <div class="flex justify-between">
@@ -43,14 +43,6 @@
     private User userCredentials = new User();
     private string errorMessage = "";
     private string loadingText;
-
-    private string animationClass = "repeating-pulse";
-
-    // Called when the user interacts with the page to stop animation
-    private void StopRepeatingPulse()
-    {
-        animationClass = "repeating-pulse paused-pulse";
-    }
 
     private async Task OnLogin()
     {

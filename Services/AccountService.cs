@@ -10,7 +10,7 @@ namespace SpendBuddy.Services
     public class AccountService
     {
         private readonly HttpClient _httpClient;
-        public int UserID {get; private set; }
+        public int? UserID {get; private set; }
 
         public string ErrorMessage {get; set; } = "";
 
@@ -32,7 +32,7 @@ namespace SpendBuddy.Services
                     if (responseContent != null)
                     {
                         UserID = responseContent.ID;
-                        Console.WriteLine($"User logged in with ID: {UserID}");
+                        // Console.WriteLine($"User logged in with ID: {UserID}");
                         return true;
                     }
                     else

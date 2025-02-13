@@ -28,7 +28,7 @@
 
         <div class="mx-3 my-1">
             <label>Category:</label>
-            <InputText @bind-Value="NewCategory" class="form-control" />
+            <InputText @bind-Value="newExpense.Category" class="form-control" />
         </div>
 
         <div class="mx-3 my-1">
@@ -36,13 +36,13 @@
             <InputText @bind-Value="NewTag" class="form-control" @onkeyup="TagInputKeyPress" maxlength="50"/>
         </div>
         
-        @if (newExpense.Tags.Count > 0)
+        @if (AllNewExpenseTags.Count > 0)
         {
             <div class="tag-container mx-3 my-1">
-                @foreach (string tag in newExpense.Tags.ToList())
+                @foreach (string tag in AllNewExpenseTags)
                 {
                     <div class="tag">
-                        @tag <span class="btn-close" @onclick="() => newExpense.Tags.Remove(tag)"></span>
+                        @tag <span class="btn-close" @onclick="() => AllNewExpenseTags.Remove(tag)"></span>
                     </div>
                 }
             </div>
@@ -58,7 +58,9 @@
             <InputDate @bind-Value="newExpense.Timestamp" class="form-control" />
         </div>
         <button type="submit" class="btn btn-primary mx-3 my-2" @onclick="SubmitExpense">Add Expense</button>
-        <div class="mx-3 my-1">@message</div>
+        @if (!string.IsNullOrEmpty(statusMessage)){
+            <div class="mx-3 my-1">@statusMessage</div>
+        }
     </nav>
 
     <!-- Main Content -->
@@ -76,17 +78,22 @@
 </div>
 
 @code {
-    private bool pressedEnter = false;
     private bool isSidebarCollapsed = false;
     private Expense? newExpense;
 
+    // Current value in the tag input box
     public string NewTag {get; set; }
-    public string NewCategory {get; set; }
+    // Set of all tags applied to the current expense waiting to be added
+    public HashSet<string> AllNewExpenseTags {get; set; } = new();
+    //Records tags that did not previously exist in database
+    public HashSet<string> BrandNewTags {get; set; } = new();
 
-    private string message = "placeholder";
+    private string statusMessage = string.Empty;
 
-    protected override void OnInitialized(){
+    protected override async Task OnInitializedAsync(){
         newExpense = new Expense { UserID = AccountService.UserID };
+        await ExpenseService.FetchAllCategoriesAsync(AccountService.UserID);
+        await ExpenseService.FetchAllTagsAsync(AccountService.UserID);
     }
 
     private void ToggleSidebar()
@@ -95,11 +102,27 @@
     }
 
     private async Task SubmitExpense(){
-        if (pressedEnter){
+        // Submit the category if it's new
+        if (!ExpenseService.Categories.Contains(newExpense.Category)){
+            await ExpenseService.AddCategoryAsync(AccountService.UserID, newExpense.Category);
+        }
+
+        // Submit any tags that didn't previously exist in the database
+        bool? tagsAdded = null;
+        if (BrandNewTags.Count > 0){
+            // Add to "user_tags" table. If false an error occurred
+            tagsAdded = await ExpenseService.AddUserTagsAsync(AccountService.UserID, BrandNewTags);
+            BrandNewTags = new();
+        }
+        if (tagsAdded == false){
+            statusMessage = "An error occurred while trying to add new tags to the database.";
             return;
         }
-        var newExpenseID = await ExpenseService.AddExpenseAsync(newExpense);
-        message = "Expense successfully added!";
+
+        // Submit the expense itself
+        var newExpenseID = await ExpenseService.AddExpenseAsync(newExpense, AllNewExpenseTags);
+        statusMessage = "Expense successfully added!";
+        AllNewExpenseTags = new();
         newExpense = new Expense { UserID = AccountService.UserID };
     }
 
@@ -112,8 +135,6 @@
     }
 
     private void AddNewTag(){
-        Console.WriteLine(NewTag);
-
         if (!string.IsNullOrWhiteSpace(NewTag)){
 
             // Removes whitespace from beginning and end of string
@@ -123,20 +144,26 @@
             NewTag = Regex.Replace(NewTag, @"\s{2,}", " ");
 
             if (!Regex.IsMatch(NewTag, "^[a-zA-Z0-9 ]+$")){
-                message = "Special characters not allowed in tags.";
+                statusMessage = "Special characters not allowed in tags.";
                 return;
             }
 
-            if (newExpense.Tags.Add(NewTag)){
-                message = $"Tag {NewTag} applied.";
+            if (AllNewExpenseTags.Add(NewTag)){
+                statusMessage = $"Tag {NewTag} applied.";
+
+                // Tag did not previously exist
+                if (!ExpenseService.Tags.Contains(NewTag)){
+                    BrandNewTags.Add(NewTag);
+                }
+
                 NewTag = "";
             }
             else{
-                message = "Tag already applied!";
+                statusMessage = "Tag already applied!";
             }
         }
         else{
-            message = "Tag cannot be empty!";
+            statusMessage = "Tag cannot be empty!";
         }
     }
 }
@@ -148,7 +175,6 @@
         height: 100vh;
     }
 
-    /* Sidebar Styles */
     .sidebar {
         background-color: #301934;
         color: white;
@@ -219,7 +245,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 2px;
-        max-height: 130px; /* Adjust this height based on your needs */
+        max-height: 130px;
         overflow-y: auto; /* Enables vertical scrolling if content overflows */
         overflow-x: hidden; /* Prevents horizontal overflow */
     }

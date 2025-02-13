@@ -29,6 +29,12 @@ else
     <tbody>
         @foreach (var expense in ExpenseService.Expenses)
         {
+            // All tags corresponding the current expense
+            List<string> tags = ExpenseService.ExpenseTagPairs
+            .Where(pair => pair.ExpenseID == expense.ExpenseID)
+            .Select(pair => pair.Tag)
+            .ToList();
+
             if (ExpenseService.mostRecentTimestamp == null || expense.Timestamp != ExpenseService.mostRecentTimestamp)
             {
                 <tr class="date-row">
@@ -41,12 +47,10 @@ else
             <tr>
                 <td class="border">$@expense.Amount.ToString("F2")</td>
                 <td class="border">@expense.Name</td>
-                <td class="border">@expense.CategoryID</td>
+                <td class="border">@expense.Category</td>
                 <td class="border">
-                    @foreach (string tag in expense.Tags){
-                        <div>
-                            @tag <span class="close-btn">&times;</span>
-                        </div>
+                    @foreach (string tag in tags){
+                        <div class="journal-tag">@tag</div>
                     }
                 </td>
                 <td class="border">@expense.Notes</td>
@@ -59,7 +63,7 @@ else
 @code {
     protected override async Task OnInitializedAsync()
     {
-        await ExpenseService.FetchAllExpensesAsync(AccountService.UserID, 0);
+        await ExpenseService.FetchPageOfExpensesAsync(AccountService.UserID, 0);
         ExpenseService.OnExpensesUpdated += RefreshTable;
     }
 
@@ -72,5 +76,25 @@ else
     .date-row {
         background-color: #e5e7eb;
         font-weight: bold;
+    }
+
+    .journal-tag {
+        display: inline-block;
+        background-color:  #e5e7eb;
+        border-radius: 15px;
+        padding: 6px 15px;
+        color: black !important;
+        text-align: center;
+        margin: 2px;
+        align-items: center;
+        gap: 6px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 250px;
+    }
+
+    table.table th,
+    table.table td {
+    vertical-align: middle;
     }
 </style>

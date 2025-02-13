@@ -10,23 +10,16 @@ namespace SpendBuddy.Services
 {
     public class ExpenseService
     {
-        // Contains both the expenses and a set of their tags
-        public GetExpensesResponse ExpensesAndTags {get; private set; } = new();
-
         /* readonly: prevents reassignment of _expenses.
         IReadOnlyList: hides modification methods from other classes. */
         private List<Expense> _expenses = new();
         public IReadOnlyList<Expense> Expenses => _expenses;
 
-        // Retrieve the entire category table
-        private Dictionary<int, string> _categories = new Dictionary<int, string>();
-        public ReadOnlyDictionary<int, string> Categories { get; }
-
-        // Retrieve the entire tags table (for autofill)
-        public HashSet<string> Tags {get; set; } = new(); 
-
         // List of expense-tag pairs for the expenses that are currently in view
-        private HashSet<Tuple<int, int>> _expenseTagPairs = new HashSet<Tuple<int, int>>();
+        public List<ExpenseTagPair> ExpenseTagPairs { get; set; } = new();
+
+        public HashSet<string> Categories {get; private set; } = new();
+        public HashSet<string> Tags {get; private set; } = new();
 
         // Used to keep track of where dates should be placed in the journal.
         public DateOnly? mostRecentTimestamp;
@@ -42,22 +35,51 @@ namespace SpendBuddy.Services
         }
 
         // Fetch expenses from API
-        public async Task FetchAllExpensesAsync(int userID, int pageIndex = 0)
+        public async Task FetchPageOfExpensesAsync(int? userID, int pageIndex = 0)
         {
+            if (userID == null){
+                throw new ArgumentNullException(nameof(userID), "Cannot fetch expenses with a null user ID.");
+            }
+            
             string url = "GetExpenses?" +
             $"userID={userID}" +
             $"&page={pageIndex}";
-            ExpensesAndTags = await _httpClient.GetFromJsonAsync<GetExpensesResponse>(url) ?? new GetExpensesResponse();
-            _expenses = ExpensesAndTags.Expenses;
-            _expenseTagPairs = ExpensesAndTags.ExpenseTagPairs;
+
+            GetExpensesResponse response = await _httpClient.GetFromJsonAsync<GetExpensesResponse>(url) ?? new GetExpensesResponse();
+            _expenses = response.Expenses;
+            ExpenseTagPairs = response.ExpenseTagPairs;
+        }
+
+        public async Task FetchAllCategoriesAsync(int? userID)
+        {
+            if (userID == null){
+                throw new ArgumentNullException(nameof(userID), "Cannot fetch categories with a null user ID.");
+            }
+            string url = "GetCategories?" + $"userID={userID}";
+            GetCategoriesResponse categoryResponse = await _httpClient.GetFromJsonAsync<GetCategoriesResponse>(url) ?? new GetCategoriesResponse();
+            Categories = categoryResponse.Categories;
+        }
+
+        public async Task FetchAllTagsAsync(int? userID)
+        {
+            if (userID == null){
+                throw new ArgumentNullException(nameof(userID), "Cannot fetch tags with a null user ID.");
+            }
+            string url = "GetTags?" + $"userID={userID}";
+            GetTagsResponse tagResponse = await _httpClient.GetFromJsonAsync<GetTagsResponse>(url) ?? new GetTagsResponse();
+            Tags = tagResponse.Tags;
         }
 
         // Add expense via API
-        public async Task<int> AddExpenseAsync(Expense expense)
+        public async Task<int> AddExpenseAsync(Expense expense, HashSet<string> tags)
         {
-            var response = await _httpClient.PostAsJsonAsync("AddExpense", expense);
+
+            ExpenseWithTags expenseToSubmit = new ExpenseWithTags(expense, tags);
+            var response = await _httpClient.PostAsJsonAsync("AddExpense", expenseToSubmit);
+
             if (!response.IsSuccessStatusCode)
             {
+                // Failed to add expense to database
                 throw new Exception($"Failed to add expense: {response.StatusCode}");
             }
 
@@ -73,6 +95,10 @@ namespace SpendBuddy.Services
                 throw new Exception("No ID was returned after adding expense.");
             }
             expense.ExpenseID = responseObject.ID;
+
+            foreach (string tag in tags){
+                ExpenseTagPairs.Add(new ExpenseTagPair {ExpenseID = responseObject.ID, Tag = tag });
+            }
             
             // Perform binary search if adding an expense from a previous day
             if (expense.Timestamp != DateOnly.FromDateTime(DateTime.Today))
@@ -103,6 +129,57 @@ namespace SpendBuddy.Services
             OnExpensesUpdated?.Invoke();
 
             return responseObject.ID;
+        }
+
+        public async Task<bool> AddCategoryAsync(int? userID, string newCategory)
+        {
+            if (userID == null){
+                throw new ArgumentNullException(nameof(userID), "Cannot add a category with a null user ID.");
+            }
+
+            if (Categories.Contains(newCategory)){
+                // Already exists - don't add
+                return false;
+            }
+            var data = new
+            {
+                userID = userID,
+                category = newCategory
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("AddCategory", data);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // Error adding category
+                return false;
+            }
+            
+            Categories.Add(newCategory);
+            return true;
+        }
+
+        
+        public async Task<bool> AddUserTagsAsync(int? userID, HashSet<string> newTags)
+        {
+            if (userID == null){
+                throw new ArgumentNullException(nameof(userID), "Cannot add tags with a null user ID.");
+            }
+
+            var data = new {
+                userID=userID,
+                tags=newTags
+            };
+
+            var response = await _httpClient.PostAsJsonAsync("AddTag", data);
+            if (!response.IsSuccessStatusCode)
+            {
+                // Error adding tags
+                return false;
+            }
+            
+            Tags.UnionWith(newTags);
+            return true;
         }
     }
 
