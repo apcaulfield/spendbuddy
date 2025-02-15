@@ -41,7 +41,7 @@ namespace SpendBuddy.Services
                 throw new InvalidOperationException("Cannot fetch expenses without a user ID.");
             }
             
-            string url = "GetExpenses?" +
+            string url = "Expense?" +
             $"userID={userID}" +
             $"&page={pageIndex}";
 
@@ -55,7 +55,7 @@ namespace SpendBuddy.Services
             if (userID == 0){
                 throw new InvalidOperationException("Cannot fetch categories without user ID.");
             }
-            string url = "GetCategories?" + $"userID={userID}";
+            string url = "Category?" + $"userID={userID}";
             GetCategoriesResponse categoryResponse = await _httpClient.GetFromJsonAsync<GetCategoriesResponse>(url) ?? new GetCategoriesResponse();
             Categories = categoryResponse.Categories;
         }
@@ -65,7 +65,7 @@ namespace SpendBuddy.Services
             if (userID == 0){
                 throw new InvalidOperationException("Cannot fetch tags without a user ID.");
             }
-            string url = "GetTags?" + $"userID={userID}";
+            string url = "Tag?" + $"userID={userID}";
             GetTagsResponse tagResponse = await _httpClient.GetFromJsonAsync<GetTagsResponse>(url) ?? new GetTagsResponse();
             Tags = tagResponse.Tags;
         }
@@ -73,9 +73,8 @@ namespace SpendBuddy.Services
         // Add expense via API
         public async Task<int> AddExpenseAsync(Expense expense, HashSet<string> tags)
         {
-
             ExpenseWithTags expenseToSubmit = new ExpenseWithTags(expense, tags);
-            var response = await _httpClient.PostAsJsonAsync("AddExpense", expenseToSubmit);
+            var response = await _httpClient.PostAsJsonAsync("Expense", expenseToSubmit);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -147,7 +146,7 @@ namespace SpendBuddy.Services
                 category = newCategory
             };
 
-            var response = await _httpClient.PostAsJsonAsync("AddCategory", data);
+            var response = await _httpClient.PostAsJsonAsync("Category", data);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -171,7 +170,7 @@ namespace SpendBuddy.Services
                 tags=newTags
             };
 
-            var response = await _httpClient.PostAsJsonAsync("AddTag", data);
+            var response = await _httpClient.PostAsJsonAsync("Tag", data);
             if (!response.IsSuccessStatusCode)
             {
                 // Error adding tags

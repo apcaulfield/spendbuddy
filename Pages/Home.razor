@@ -1,14 +1,21 @@
 ﻿@page "/"
-@inject AccountService AccountService
+
 @inject NavigationManager NavManager
+@inject ISessionStorageService SessionStorage
 
 @using SpendBuddy.Models
 
 <PageTitle>SpendBuddy</PageTitle>
 
 @code{
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        NavManager.NavigateTo("/login", forceLoad: true);
+        int userID = await SessionStorage.GetItemAsync<int>("UserID");
+        if (userID == 0){
+            NavManager.NavigateTo("/login", forceLoad: true);
+        }
+        else{
+            NavManager.NavigateTo("/journal", forceLoad: true);
+        }
     }
 }

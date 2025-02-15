@@ -26,7 +26,7 @@ namespace SpendBuddy.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("CreateNewAccount", newUser);
+                var response = await _httpClient.PostAsJsonAsync("User", newUser);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -60,7 +60,7 @@ namespace SpendBuddy.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("login", loginCredentials);
+                var response = await _httpClient.PostAsJsonAsync("Login", loginCredentials);
 
                 if (response.IsSuccessStatusCode)
                 {
