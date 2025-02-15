@@ -35,10 +35,10 @@ namespace SpendBuddy.Services
         }
 
         // Fetch expenses from API
-        public async Task FetchPageOfExpensesAsync(int? userID, int pageIndex = 0)
+        public async Task FetchPageOfExpensesAsync(int userID, int pageIndex = 0)
         {
-            if (userID == null){
-                throw new ArgumentNullException(nameof(userID), "Cannot fetch expenses with a null user ID.");
+            if (userID == 0){
+                throw new InvalidOperationException("Cannot fetch expenses without a user ID.");
             }
             
             string url = "GetExpenses?" +
@@ -50,20 +50,20 @@ namespace SpendBuddy.Services
             ExpenseTagPairs = response.ExpenseTagPairs;
         }
 
-        public async Task FetchAllCategoriesAsync(int? userID)
+        public async Task FetchAllCategoriesAsync(int userID)
         {
-            if (userID == null){
-                throw new ArgumentNullException(nameof(userID), "Cannot fetch categories with a null user ID.");
+            if (userID == 0){
+                throw new InvalidOperationException("Cannot fetch categories without user ID.");
             }
             string url = "GetCategories?" + $"userID={userID}";
             GetCategoriesResponse categoryResponse = await _httpClient.GetFromJsonAsync<GetCategoriesResponse>(url) ?? new GetCategoriesResponse();
             Categories = categoryResponse.Categories;
         }
 
-        public async Task FetchAllTagsAsync(int? userID)
+        public async Task FetchAllTagsAsync(int userID)
         {
-            if (userID == null){
-                throw new ArgumentNullException(nameof(userID), "Cannot fetch tags with a null user ID.");
+            if (userID == 0){
+                throw new InvalidOperationException("Cannot fetch tags without a user ID.");
             }
             string url = "GetTags?" + $"userID={userID}";
             GetTagsResponse tagResponse = await _httpClient.GetFromJsonAsync<GetTagsResponse>(url) ?? new GetTagsResponse();
@@ -131,10 +131,10 @@ namespace SpendBuddy.Services
             return responseObject.ID;
         }
 
-        public async Task<bool> AddCategoryAsync(int? userID, string newCategory)
+        public async Task<bool> AddCategoryAsync(int userID, string newCategory)
         {
-            if (userID == null){
-                throw new ArgumentNullException(nameof(userID), "Cannot add a category with a null user ID.");
+            if (userID == 0){
+                throw new InvalidOperationException("Cannot add a category without a user ID.");
             }
 
             if (Categories.Contains(newCategory)){
@@ -160,10 +160,10 @@ namespace SpendBuddy.Services
         }
 
         
-        public async Task<bool> AddUserTagsAsync(int? userID, HashSet<string> newTags)
+        public async Task<bool> AddUserTagsAsync(int userID, HashSet<string> newTags)
         {
-            if (userID == null){
-                throw new ArgumentNullException(nameof(userID), "Cannot add tags with a null user ID.");
+            if (userID == 0){
+                throw new InvalidOperationException("Cannot add tags without a user ID.");
             }
 
             var data = new {

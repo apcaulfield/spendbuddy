@@ -1,6 +1,7 @@
 ﻿@page "/journal"
 @inject AccountService AccountService
 @inject ExpenseService ExpenseService
+@inject ISessionStorageService SessionStorage
 
 @layout MainLayout
 
@@ -61,9 +62,15 @@ else
 }
 
 @code {
+    private int userID;
+
     protected override async Task OnInitializedAsync()
     {
-        await ExpenseService.FetchPageOfExpensesAsync(AccountService.UserID, 0);
+        userID = await SessionStorage.GetItemAsync<int>("UserID");
+        if (userID == 0){
+            throw new InvalidOperationException("Tried accessing journal without a User ID.");
+        }
+        await ExpenseService.FetchPageOfExpensesAsync(userID, 0);
         ExpenseService.OnExpensesUpdated += RefreshTable;
     }
 

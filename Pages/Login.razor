@@ -2,6 +2,7 @@
 @layout EmptyLayout
 @inject AccountService AccountService
 @inject NavigationManager Navigation
+@inject ISessionStorageService SessionStorage
 
 @using SpendBuddy.Models
 
@@ -40,13 +41,15 @@
 </div>
 
 @code {
+    private int userID;
     private User userCredentials = new User();
     private string errorMessage = "";
     private string loadingText;
 
-    protected override async Task OnInitializedAsync(){
-        bool alreadySignedIn = await AccountService.InitializeUserAsync();
-        if (alreadySignedIn){
+    protected override async Task OnInitializedAsync()
+    {
+        userID = await SessionStorage.GetItemAsync<int>("UserID");
+        if (userID != 0){
             Navigation.NavigateTo("/journal");
         }
     }

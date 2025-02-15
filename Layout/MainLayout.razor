@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject AccountService AccountService
 @inject ExpenseService ExpenseService
+@inject ISessionStorageService SessionStorage
 
 @using System.Text.Json
 @using System.Text.RegularExpressions
@@ -78,8 +79,9 @@
 </div>
 
 @code {
+    private int userID;
     private bool isSidebarCollapsed = false;
-    private Expense? newExpense;
+    private Expense newExpense = new();
 
     // Current value in the tag input box
     public string NewTag {get; set; }
@@ -91,9 +93,13 @@
     private string statusMessage = string.Empty;
 
     protected override async Task OnInitializedAsync(){
-        newExpense = new Expense { UserID = AccountService.UserID };
-        await ExpenseService.FetchAllCategoriesAsync(AccountService.UserID);
-        await ExpenseService.FetchAllTagsAsync(AccountService.UserID);
+        userID = await SessionStorage.GetItemAsync<int>("UserID");
+        if (userID == 0){
+            throw new InvalidOperationException("Tried accessing sidebar without a User ID.");
+        }
+        newExpense = new Expense { UserID = userID };
+        await ExpenseService.FetchAllCategoriesAsync(userID);
+        await ExpenseService.FetchAllTagsAsync(userID);
     }
 
     private void ToggleSidebar()
@@ -104,14 +110,14 @@
     private async Task SubmitExpense(){
         // Submit the category if it's new
         if (!ExpenseService.Categories.Contains(newExpense.Category)){
-            await ExpenseService.AddCategoryAsync(AccountService.UserID, newExpense.Category);
+            await ExpenseService.AddCategoryAsync(userID, newExpense.Category);
         }
 
         // Submit any tags that didn't previously exist in the database
         bool? tagsAdded = null;
         if (BrandNewTags.Count > 0){
             // Add to "user_tags" table. If false an error occurred
-            tagsAdded = await ExpenseService.AddUserTagsAsync(AccountService.UserID, BrandNewTags);
+            tagsAdded = await ExpenseService.AddUserTagsAsync(userID, BrandNewTags);
             BrandNewTags = new();
         }
         if (tagsAdded == false){
@@ -123,7 +129,7 @@
         var newExpenseID = await ExpenseService.AddExpenseAsync(newExpense, AllNewExpenseTags);
         statusMessage = "Expense successfully added!";
         AllNewExpenseTags = new();
-        newExpense = new Expense { UserID = AccountService.UserID };
+        newExpense = new Expense { UserID = userID };
     }
 
     private void TagInputKeyPress(KeyboardEventArgs e)

@@ -11,9 +11,7 @@ namespace SpendBuddy.Services
     public class AccountService
     {
         private readonly ISessionStorageService _sessionStorage;
-
         private readonly HttpClient _httpClient;
-        public int? UserID {get; private set; }
 
         public string ErrorMessage {get; set; } = "";
 
@@ -21,19 +19,6 @@ namespace SpendBuddy.Services
         {
             _httpClient = httpClient;
             _sessionStorage = sessionStorage;
-        }
-
-        public async Task<bool> InitializeUserAsync(){
-            int? storedUserID = await _sessionStorage.GetItemAsync<int?>("UserID");
-
-            if (storedUserID.HasValue && storedUserID > 0)
-            {
-                // User ID has already been stored
-                UserID = storedUserID.Value;
-                return true;
-            }
-
-            return false;
         }
 
         // Attempt to add a new user to the database
@@ -46,11 +31,10 @@ namespace SpendBuddy.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadFromJsonAsync<IDResponse>();
-                    if (responseContent != null)
+                    if (responseContent?.ID != null)
                     {
-                        UserID = responseContent.ID;
-                        await _sessionStorage.SetItemAsync("UserID", UserID);
-                        // Console.WriteLine($"User logged in with ID: {UserID}");
+                        await _sessionStorage.SetItemAsync("UserID", responseContent.ID);
+                        // Console.WriteLine($"User logged in with ID: {userID}");
                         return true;
                     }
                     else
@@ -81,9 +65,8 @@ namespace SpendBuddy.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadFromJsonAsync<IDResponse>();
-                    if (responseContent != null){
-                        UserID = responseContent.ID;
-                        await _sessionStorage.SetItemAsync("UserID", UserID);
+                    if (responseContent?.ID != null){
+                        await _sessionStorage.SetItemAsync("UserID", responseContent.ID);
                         return true;
                     }
                     else{
