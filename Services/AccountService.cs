@@ -2,6 +2,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Blazored.SessionStorage;
 using SpendBuddy.Models;
 using System;
 
@@ -9,14 +10,30 @@ namespace SpendBuddy.Services
 {
     public class AccountService
     {
+        private readonly ISessionStorageService _sessionStorage;
+
         private readonly HttpClient _httpClient;
         public int? UserID {get; private set; }
 
         public string ErrorMessage {get; set; } = "";
 
-        public AccountService(HttpClient httpClient)
+        public AccountService(HttpClient httpClient, ISessionStorageService sessionStorage)
         {
             _httpClient = httpClient;
+            _sessionStorage = sessionStorage;
+        }
+
+        public async Task<bool> InitializeUserAsync(){
+            int? storedUserID = await _sessionStorage.GetItemAsync<int?>("UserID");
+
+            if (storedUserID.HasValue && storedUserID > 0)
+            {
+                // User ID has already been stored
+                UserID = storedUserID.Value;
+                return true;
+            }
+
+            return false;
         }
 
         // Attempt to add a new user to the database
@@ -32,6 +49,7 @@ namespace SpendBuddy.Services
                     if (responseContent != null)
                     {
                         UserID = responseContent.ID;
+                        await _sessionStorage.SetItemAsync("UserID", UserID);
                         // Console.WriteLine($"User logged in with ID: {UserID}");
                         return true;
                     }
@@ -65,6 +83,7 @@ namespace SpendBuddy.Services
                     var responseContent = await response.Content.ReadFromJsonAsync<IDResponse>();
                     if (responseContent != null){
                         UserID = responseContent.ID;
+                        await _sessionStorage.SetItemAsync("UserID", UserID);
                         return true;
                     }
                     else{

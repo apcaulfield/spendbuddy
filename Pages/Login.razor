@@ -44,6 +44,13 @@
     private string errorMessage = "";
     private string loadingText;
 
+    protected override async Task OnInitializedAsync(){
+        bool alreadySignedIn = await AccountService.InitializeUserAsync();
+        if (alreadySignedIn){
+            Navigation.NavigateTo("/journal");
+        }
+    }
+
     private async Task OnLogin()
     {
         errorMessage = "";
