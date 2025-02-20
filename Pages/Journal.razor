@@ -3,6 +3,8 @@
 @inject ExpenseService ExpenseService
 @inject ISessionStorageService SessionStorage
 
+@using System.Text.RegularExpressions
+
 @layout MainLayout
 
 <PageTitle>Journal</PageTitle>
@@ -17,52 +19,104 @@
 }
 else
 {
-<table class="table w-full">
-    <thead>
-        <tr>
-            <th class="border">Amount</th>
-            <th class="border">Name</th>
-            <th class="border">Category</th>
-            <th class="border">Tags</th>
-            <th class="border">Notes</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var expense in ExpenseService.Expenses)
-        {
-            // All tags corresponding the current expense
-            List<string> tags = ExpenseService.ExpenseTagPairs
-            .Where(pair => pair.ExpenseID == expense.ExpenseID)
-            .Select(pair => pair.Tag)
-            .ToList();
-
-            if (ExpenseService.mostRecentTimestamp == null || expense.Timestamp != ExpenseService.mostRecentTimestamp)
-            {
-                <tr class="date-row">
-                    <td colspan="6" class="font-bold">
-                        @expense.Timestamp.ToString("MM/dd/yyyy")
-                    </td>
-                </tr>
-                ExpenseService.mostRecentTimestamp = expense.Timestamp;
-            }
+    <table class="table w-full">
+        <thead>
             <tr>
-                <td class="border">$@expense.Amount.ToString("F2")</td>
-                <td class="border">@expense.Name</td>
-                <td class="border">@expense.Category</td>
-                <td class="border">
-                    @foreach (string tag in tags){
-                        <div class="journal-tag">@tag</div>
-                    }
-                </td>
-                <td class="border">@expense.Notes</td>
+                <th class="border">Amount</th>
+                <th class="border">Name</th>
+                <th class="border">Category</th>
+                <th class="border">Tags</th>
+                <th class="border">Notes</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var expense in ExpenseService.Expenses)
+            {
+                // All tags corresponding the current expense
+                List<string> tags = ExpenseService.ExpenseTagPairs
+                .Where(pair => pair.ExpenseID == expense.ExpenseID)
+                .Select(pair => pair.Tag)
+                .ToList();
+
+                if (ExpenseService.mostRecentTimestamp == null || expense.Timestamp != ExpenseService.mostRecentTimestamp)
+                {
+                    <tr class="date-row">
+                        <td colspan="6" class="font-bold">
+                            @expense.Timestamp.ToString("MM/dd/yyyy")
+                        </td>
+                    </tr>
+                    ExpenseService.mostRecentTimestamp = expense.Timestamp;
+                }
+                <tr @onclick="@(() => OpenEditModal(expense))">
+                    <td class="border">$@expense.Amount.ToString("F2")</td>
+                    <td class="border">@expense.Name</td>
+                    <td class="border">@expense.Category</td>
+                    <td class="border">
+                        @foreach (string tag in tags){
+                            <div class="journal-tag">@tag</div>
+                        }
+                    </td>
+                    <td class="border">@expense.Notes</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (showModal && editingExpense != null)
+{
+    <div class="modal-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;" @onclick="CloseModal">
+        <div class="modal-content" @onclick:stopPropagation style="background:white; padding:20px; max-width:500px; align-items: center;">
+            <h3>Edit Expense</h3>
+            <div class="mx-3 my-1">
+                <label>Name:</label>
+                <InputText @bind-Value="editingExpense.Name" class="form-control" />
+            </div>
+             <div class="mx-3 my-1">
+                <label>Amount:</label>
+                    <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <InputNumber @bind-Value="editingExpense.Amount" class="form-control" step="0.01"/>
+                </div>
+            </div>
+            <div class="mx-3 my-1">
+                <label>Category:</label>
+                <InputText @bind-Value="editingExpense.Category" class="form-control" />
+            </div>
+            <div class="mx-3 my-1">
+                <label>Add Tags:</label>
+                <InputText @bind-Value="NewTag" class="form-control" @onkeyup="TagInputKeyPress" maxlength="50"/>
+            </div>
+            
+            @if (AllNewTags.Count > 0)
+            {
+                <div class="tag-container mx-3 my-1">
+                    @foreach (string tag in AllNewTags)
+                    {
+                        <div class="edit-tag">
+                            @tag <span class="btn-close" @onclick="() => AllNewTags.Remove(tag)"></span>
+                        </div>
+                    }
+                </div>
+            }
+            <div class="mx-3 my-1">
+                <label>Notes:</label>
+                <textarea class="form-control" @bind="editingExpense.Notes"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary mx-3 mt-2" @onclick="SaveExpense">Save</button>
+            <button type="submit" class="btn btn-primary mx-3 my-2" @onclick="CloseModal">Cancel</button>
+        </div>
+    </div>
 }
 
 @code {
     private int userID;
+    private bool showModal = false;
+    private Expense editingExpense;
+    public string NewTag {get; set; }
+
+    public HashSet<string> AllNewTags {get; set; } = new();
+    public HashSet<string> BrandNewTags {get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -76,6 +130,70 @@ else
 
     private void RefreshTable(){
         InvokeAsync(StateHasChanged);
+    }
+
+    private void OpenEditModal(Expense expense)
+    {
+        editingExpense = expense;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+    }
+
+    private void TagInputKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddNewTag();
+        }
+    }
+
+    private void AddNewTag(){
+        if (!string.IsNullOrWhiteSpace(NewTag)){
+
+            // Removes whitespace from beginning and end of string
+            NewTag = NewTag.Trim();
+
+            // Removes all consecutive occurences of whitespace characters inside of string
+            NewTag = Regex.Replace(NewTag, @"\s{2,}", " ");
+
+            if (!Regex.IsMatch(NewTag, "^[a-zA-Z0-9 ]+$")){
+                return;
+            }
+            if (AllNewTags.Add(NewTag)){
+                // Tag did not previously exist
+                if (!ExpenseService.Tags.Contains(NewTag)){
+                    BrandNewTags.Add(NewTag);
+                }
+                NewTag = "";
+            }
+        }
+    }
+
+    private async Task SaveExpense(){
+        // Submit the category if it's new
+        if (!ExpenseService.Categories.Contains(editingExpense.Category)){
+            await ExpenseService.AddCategoryAsync(userID, editingExpense.Category);
+        }
+
+        // Submit any tags that didn't previously exist in the database
+        bool? tagsAdded = null;
+        if (BrandNewTags.Count > 0){
+            // Add to "user_tags" table. If false an error occurred
+            tagsAdded = await ExpenseService.AddUserTagsAsync(userID, BrandNewTags);
+            BrandNewTags = new();
+        }
+        if (tagsAdded == false){
+            return;
+        }
+
+        // Submit the expense itself
+        var editingExpenseID = await ExpenseService.AddExpenseAsync(editingExpense, AllNewTags);
+        AllNewTags = new();
+        editingExpense = new Expense { UserID = userID };
     }
 }
 
@@ -103,5 +221,34 @@ else
     table.table th,
     table.table td {
     vertical-align: middle;
+    }
+
+    .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+        max-height: 130px;
+        overflow-y: auto; /* Enables vertical scrolling if content overflows */
+        overflow-x: hidden; /* Prevents horizontal overflow */
+    }
+
+    .edit-tag {
+        background: rgba(128, 128, 128, 0.3); /* Grey with 30% opacity */
+        backdrop-filter: blur(10px);
+        border-radius: 15px; /* Rounded corners */
+        padding: 6px 15px;
+        color: black; /* Black text */
+        width: auto;
+        text-align: center;
+        margin: 2px;
+        align-items: center; /* Vertically center */
+        gap: 6px; /* Space between text and close button */
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        max-width: 250px;
+    }
+
+    .edit-tag .btn-close {
+        margin-left: 8px;
     }
 </style>
