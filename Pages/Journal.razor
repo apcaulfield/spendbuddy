@@ -83,22 +83,14 @@ else
                 <label>Category:</label>
                 <InputText @bind-Value="editingExpense.Category" class="form-control" />
             </div>
-            <div class="mx-3 my-1">
-                <label>Add Tags:</label>
-                <InputText @bind-Value="NewTag" class="form-control" @onkeyup="TagInputKeyPress" maxlength="50"/>
-            </div>
+            
+            <NewTagInput AddNewTagCallback="AddNewTag"/>
             
             @if (AllNewTags.Count > 0)
             {
-                <div class="tag-container mx-3 my-1">
-                    @foreach (string tag in AllNewTags)
-                    {
-                        <div class="edit-tag">
-                            @tag <span class="btn-close" @onclick="() => AllNewTags.Remove(tag)"></span>
-                        </div>
-                    }
-                </div>
+                <TagContainer Tags="AllNewTags" />
             }
+
             <div class="mx-3 my-1">
                 <label>Notes:</label>
                 <textarea class="form-control" @bind="editingExpense.Notes"></textarea>
@@ -143,32 +135,25 @@ else
         showModal = false;
     }
 
-    private void TagInputKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            AddNewTag();
-        }
-    }
-
-    private void AddNewTag(){
-        if (!string.IsNullOrWhiteSpace(NewTag)){
-
+    // Updated to accept the tag from NewTagInput
+    private void AddNewTag(string newTag){
+        if (!string.IsNullOrWhiteSpace(newTag)){
             // Removes whitespace from beginning and end of string
-            NewTag = NewTag.Trim();
+            newTag = newTag.Trim();
 
             // Removes all consecutive occurences of whitespace characters inside of string
-            NewTag = Regex.Replace(NewTag, @"\s{2,}", " ");
+            newTag = Regex.Replace(newTag, @"\s{2,}", " ");
 
-            if (!Regex.IsMatch(NewTag, "^[a-zA-Z0-9 ]+$")){
+            if (!Regex.IsMatch(newTag, "^[a-zA-Z0-9 ]+$")){
                 return;
             }
-            if (AllNewTags.Add(NewTag)){
+            if (AllNewTags.Add(newTag)){
                 // Tag did not previously exist
-                if (!ExpenseService.Tags.Contains(NewTag)){
-                    BrandNewTags.Add(NewTag);
+                if (!ExpenseService.Tags.Contains(newTag)){
+                    BrandNewTags.Add(newTag);
                 }
                 NewTag = "";
+                StateHasChanged();
             }
         }
     }
@@ -221,34 +206,5 @@ else
     table.table th,
     table.table td {
     vertical-align: middle;
-    }
-
-    .tag-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 2px;
-        max-height: 130px;
-        overflow-y: auto; /* Enables vertical scrolling if content overflows */
-        overflow-x: hidden; /* Prevents horizontal overflow */
-    }
-
-    .edit-tag {
-        background: rgba(128, 128, 128, 0.3); /* Grey with 30% opacity */
-        backdrop-filter: blur(10px);
-        border-radius: 15px; /* Rounded corners */
-        padding: 6px 15px;
-        color: black; /* Black text */
-        width: auto;
-        text-align: center;
-        margin: 2px;
-        align-items: center; /* Vertically center */
-        gap: 6px; /* Space between text and close button */
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        max-width: 250px;
-    }
-
-    .edit-tag .btn-close {
-        margin-left: 8px;
     }
 </style>

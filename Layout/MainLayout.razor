@@ -32,21 +32,11 @@
             <InputText @bind-Value="newExpense.Category" class="form-control" />
         </div>
 
-        <div class="mx-3 my-1">
-            <label>Add Tags:</label>
-            <InputText @bind-Value="NewTag" class="form-control" @onkeyup="TagInputKeyPress" maxlength="50"/>
-        </div>
+        <NewTagInput AddNewTagCallback="AddNewTag" />
         
         @if (AllNewExpenseTags.Count > 0)
         {
-            <div class="tag-container mx-3 my-1">
-                @foreach (string tag in AllNewExpenseTags)
-                {
-                    <div class="tag">
-                        @tag <span class="btn-close" @onclick="() => AllNewExpenseTags.Remove(tag)"></span>
-                    </div>
-                }
-            </div>
+            <TagContainer Tags="AllNewExpenseTags" />
         }
 
         <div class="mx-3 my-1">
@@ -83,8 +73,6 @@
     private bool isSidebarCollapsed = false;
     private Expense newExpense = new();
 
-    // Current value in the tag input box
-    public string NewTag {get; set; }
     // Set of all tags applied to the current expense waiting to be added
     public HashSet<string> AllNewExpenseTags {get; set; } = new();
     //Records tags that did not previously exist in database
@@ -132,37 +120,29 @@
         newExpense = new Expense { UserID = userID };
     }
 
-    private void TagInputKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            AddNewTag();
-        }
-    }
-
-    private void AddNewTag(){
-        if (!string.IsNullOrWhiteSpace(NewTag)){
+    private void AddNewTag(string newTag){
+        if (!string.IsNullOrWhiteSpace(newTag)){
 
             // Removes whitespace from beginning and end of string
-            NewTag = NewTag.Trim();
+            newTag = newTag.Trim();
 
             // Removes all consecutive occurences of whitespace characters inside of string
-            NewTag = Regex.Replace(NewTag, @"\s{2,}", " ");
+            newTag = Regex.Replace(newTag, @"\s{2,}", " ");
 
-            if (!Regex.IsMatch(NewTag, "^[a-zA-Z0-9 ]+$")){
+            if (!Regex.IsMatch(newTag, "^[a-zA-Z0-9 ]+$")){
                 statusMessage = "Special characters not allowed in tags.";
                 return;
             }
 
-            if (AllNewExpenseTags.Add(NewTag)){
-                statusMessage = $"Tag {NewTag} applied.";
+            if (AllNewExpenseTags.Add(newTag)){
+                statusMessage = $"Tag {newTag} applied.";
 
                 // Tag did not previously exist
-                if (!ExpenseService.Tags.Contains(NewTag)){
-                    BrandNewTags.Add(NewTag);
+                if (!ExpenseService.Tags.Contains(newTag)){
+                    BrandNewTags.Add(newTag);
                 }
 
-                NewTag = "";
+                newTag = "";
             }
             else{
                 statusMessage = "Tag already applied!";

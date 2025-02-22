@@ -1,18 +1,13 @@
 @code {
     [Parameter]
     public HashSet<string> Tags { get; set; }
-
-    /* Reference to tag is sent to parent component's remove tag method
-    for further handling. */
-    [Parameter]
-    public EventCallback<string> OnRemoveTag { get; set; }
 }
 
 <div class="tag-container mx-3 my-1">
     @foreach (string tag in Tags)
     {
-        <div class="tag">
-            @tag <span class="btn-close" @onclick="() => OnRemoveTag.InvokeAsync(tag)"></span>
+        <div class="tag-container-item">
+            @tag <span class="btn-close" @onclick="() => Tags.Remove(tag)"></span>
         </div>
     }
 </div>
@@ -27,12 +22,12 @@
         overflow-x: hidden; /* Prevents horizontal overflow */
     }
 
-    .tag {
-        background: rgba(255, 255, 255, 0.3); /* White with 30% opacity */
+    .tag-container-item {
+        background: rgba(128, 128, 128, 0.3);
         backdrop-filter: blur(10px);
         border-radius: 15px; /* Rounded corners */
         padding: 6px 15px;
-        color: white;
+        color: black; /* Black text */
         width: auto;
         text-align: center;
         margin: 2px;
@@ -43,8 +38,7 @@
         max-width: 250px;
     }
 
-    .tag .btn-close {
+    .tag-container-item .btn-close {
         margin-left: 8px;
-        filter: invert(1); /* Makes the close button white */
     }
 </style>
