@@ -16,8 +16,7 @@
     {
         if (e.Key == "Enter")
         {
-            // Synchronously invoke the callback.
-            AddNewTagCallback.InvokeAsync(NewTag).GetAwaiter().GetResult();
+            AddNewTagCallback.InvokeAsync(NewTag);
             NewTag = "";
         }
     }
