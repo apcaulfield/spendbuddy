@@ -63,37 +63,37 @@ else
     </table>
 }
 
-@if (showModal && editingExpense != null)
+@if (showModal && editableExpense != null)
 {
     <div class="modal-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;" @onclick="CloseModal">
         <div class="modal-content" @onclick:stopPropagation style="background:white; padding:20px; max-width:500px; align-items: center;">
             <h3>Edit Expense</h3>
             <div class="mx-3 my-1">
                 <label>Name:</label>
-                <InputText @bind-Value="editingExpense.Name" class="form-control" />
+                <InputText @bind-Value="editableExpense.Expense.Name" class="form-control" />
             </div>
              <div class="mx-3 my-1">
                 <label>Amount:</label>
                     <div class="input-group">
                     <span class="input-group-text">$</span>
-                    <InputNumber @bind-Value="editingExpense.Amount" class="form-control" step="0.01"/>
+                    <InputNumber @bind-Value="editableExpense.Expense.Amount" class="form-control" step="0.01"/>
                 </div>
             </div>
             <div class="mx-3 my-1">
                 <label>Category:</label>
-                <InputText @bind-Value="editingExpense.Category" class="form-control" />
+                <InputText @bind-Value="editableExpense.Expense.Category" class="form-control" />
             </div>
             
             <NewTagInput AddNewTagCallback="AddNewTag"/>
             
-            @if (AllNewTags.Count > 0)
+            @if (editableExpense.AllTags.Count > 0)
             {
-                <TagContainer Tags="AllNewTags" />
+                <TagContainer Tags="editableExpense.AllTags" />
             }
 
             <div class="mx-3 my-1">
                 <label>Notes:</label>
-                <textarea class="form-control" @bind="editingExpense.Notes"></textarea>
+                <textarea class="form-control" @bind="editableExpense.Expense.Notes"></textarea>
             </div>
             <button type="submit" class="btn btn-primary mx-3 mt-2" @onclick="SaveExpense">Save</button>
             <button type="submit" class="btn btn-primary mx-3 my-2" @onclick="CloseModal">Cancel</button>
@@ -104,11 +104,7 @@ else
 @code {
     private int userID;
     private bool showModal = false;
-    private Expense editingExpense;
-    public string NewTag {get; set; }
-
-    public HashSet<string> AllNewTags {get; set; } = new();
-    public HashSet<string> BrandNewTags {get; set; } = new();
+    private EditableExpense editableExpense = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -126,13 +122,20 @@ else
 
     private void OpenEditModal(Expense expense)
     {
-        editingExpense = expense;
+        editableExpense.Expense = expense;
+        editableExpense.InitialTags = new HashSet<string>(ExpenseService.ExpenseTagPairs
+            .Where(pair => pair.ExpenseID == expense.ExpenseID)
+            .Select(pair => pair.Tag));
+        editableExpense.AllTags = new HashSet<string>(editableExpense.InitialTags);
         showModal = true;
     }
 
     private void CloseModal()
     {
         showModal = false;
+        editableExpense.InitialTags = new();
+        editableExpense.AllTags = new();
+        editableExpense.BrandNewTags = new();
     }
 
     // Updated to accept the tag from NewTagInput
@@ -147,12 +150,13 @@ else
             if (!Regex.IsMatch(newTag, "^[a-zA-Z0-9 ]+$")){
                 return;
             }
-            if (AllNewTags.Add(newTag)){
+            if (editableExpense.AllTags.Add(newTag)){
                 // Tag did not previously exist
                 if (!ExpenseService.Tags.Contains(newTag)){
-                    BrandNewTags.Add(newTag);
+                    // Tag did not exist for user in the database
+                    editableExpense.BrandNewTags.Add(newTag);
                 }
-                NewTag = "";
+                editableExpense.NewTag = "";
                 StateHasChanged();
             }
         }
@@ -160,25 +164,26 @@ else
 
     private async Task SaveExpense(){
         // Submit the category if it's new
-        if (!ExpenseService.Categories.Contains(editingExpense.Category)){
-            await ExpenseService.AddCategoryAsync(userID, editingExpense.Category);
+        if (!ExpenseService.Categories.Contains(editableExpense.Expense.Category)){
+            await ExpenseService.AddCategoryAsync(userID, editableExpense.Expense.Category);
         }
 
         // Submit any tags that didn't previously exist in the database
         bool? tagsAdded = null;
-        if (BrandNewTags.Count > 0){
+        if (editableExpense.BrandNewTags.Count > 0){
             // Add to "user_tags" table. If false an error occurred
-            tagsAdded = await ExpenseService.AddUserTagsAsync(userID, BrandNewTags);
-            BrandNewTags = new();
+            tagsAdded = await ExpenseService.AddUserTagsAsync(userID, editableExpense.BrandNewTags);
+            editableExpense.BrandNewTags = new();
         }
         if (tagsAdded == false){
             return;
         }
 
         // Submit the expense itself
-        var editingExpenseID = await ExpenseService.AddExpenseAsync(editingExpense, AllNewTags);
-        AllNewTags = new();
-        editingExpense = new Expense { UserID = userID };
+        var editableExpenseID = await ExpenseService.AddExpenseAsync(editableExpense.Expense, editableExpense.AllTags);
+        editableExpense.InitialTags = editableExpense.AllTags;
+        editableExpense.AllTags = new();
+        editableExpense.BrandNewTags = new();
     }
 }
 

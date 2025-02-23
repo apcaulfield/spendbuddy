@@ -9,7 +9,7 @@ namespace SpendBuddy.Models
 
         public string Name {get; set; } = "";
         
-        public string Category {get; set; }
+        public string Category {get; set; } = "";
 
         public DateOnly Timestamp { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
@@ -44,26 +44,20 @@ namespace SpendBuddy.Models
     // Wrapper class to handle GetExpenses API response
     public class GetExpensesResponse
     {
-        public string Message {get; set; }
+        public string Message {get; set; } = "";
         public List<Expense> Expenses { get; set; } = new();
         public List<ExpenseTagPair> ExpenseTagPairs { get; set; } = new();
     }
 
     public class GetCategoriesResponse
     {
-        public string Message {get; set; }
-        public HashSet<string> Categories { get; set; }
+        public string Message {get; set; } = "";
+        public required HashSet<string> Categories { get; set; }
     }
 
     public class GetTagsResponse
     {
-        public string Message {get; set; }
-        public HashSet<string> Tags { get; set; }
-    }
-
-    public class UserTags
-    {
-        public int? UserID {get; set; }
-        public HashSet<string> Tags {get; set; }
+        public string Message {get; set; } = "";
+        public required HashSet<string> Tags { get; set; }
     }
 }

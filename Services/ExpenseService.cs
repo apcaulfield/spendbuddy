@@ -1,8 +1,4 @@
-using System.Net.Http;
 using System.Net.Http.Json;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Collections.ObjectModel;
 using System.Text.Json;
 using SpendBuddy.Models;
 
@@ -56,8 +52,8 @@ namespace SpendBuddy.Services
                 throw new InvalidOperationException("Cannot fetch categories without user ID.");
             }
             string url = "Category?" + $"userID={userID}";
-            GetCategoriesResponse categoryResponse = await _httpClient.GetFromJsonAsync<GetCategoriesResponse>(url) ?? new GetCategoriesResponse();
-            Categories = categoryResponse.Categories;
+            GetCategoriesResponse? categoryResponse = await _httpClient.GetFromJsonAsync<GetCategoriesResponse>(url);
+            Categories = categoryResponse?.Categories ?? new HashSet<string>();
         }
 
         public async Task FetchAllTagsAsync(int userID)
@@ -66,8 +62,8 @@ namespace SpendBuddy.Services
                 throw new InvalidOperationException("Cannot fetch tags without a user ID.");
             }
             string url = "Tag?" + $"userID={userID}";
-            GetTagsResponse tagResponse = await _httpClient.GetFromJsonAsync<GetTagsResponse>(url) ?? new GetTagsResponse();
-            Tags = tagResponse.Tags;
+            GetTagsResponse? tagResponse = await _httpClient.GetFromJsonAsync<GetTagsResponse>(url);
+            Tags = tagResponse?.Tags ?? new HashSet<string>();
         }
 
         // Add expense via API
@@ -93,7 +89,7 @@ namespace SpendBuddy.Services
             if (responseObject?.ID == null || responseObject?.ID == 0){
                 throw new Exception("No ID was returned after adding expense.");
             }
-            expense.ExpenseID = responseObject.ID;
+            expense.ExpenseID = responseObject!.ID;
 
             foreach (string tag in tags){
                 ExpenseTagPairs.Add(new ExpenseTagPair {ExpenseID = responseObject.ID, Tag = tag });
@@ -184,8 +180,11 @@ namespace SpendBuddy.Services
 
     class ExpenseTimestampComparer : IComparer<Expense>
     {
-        public int Compare(Expense x, Expense y)
+        public int Compare(Expense? x, Expense? y)
         {
+            if (x == null && y == null) return 0;
+            if (x == null) return -1;
+            if (y == null) return 1;
             return y.Timestamp.CompareTo(x.Timestamp);
         }
     }
