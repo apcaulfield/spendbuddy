@@ -176,6 +176,58 @@ namespace SpendBuddy.Services
             Tags.UnionWith(newTags);
             return true;
         }
+
+        public async Task<bool> UpdateExpenseAsync(Expense expense, HashSet<string> tags)
+        {
+            if (expense.ExpenseID == null)
+            {
+                throw new Exception("ExpenseID cannot be null when updating expense.");
+            }
+
+            ExpenseWithTags expenseToUpdate = new ExpenseWithTags(expense, tags);
+            // Sending PUT request to update the expense; endpoint constructed with ExpenseID
+            var response = await _httpClient.PatchAsJsonAsync($"Expense/{expense.ExpenseID}", expenseToUpdate);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception($"Failed to update expense: {response.StatusCode}");
+            }
+            
+            // Remove old expense from the list
+            _expenses.RemoveAll(e => e.ExpenseID == expense.ExpenseID);
+
+            // Reinsert the updated expense using similar sorting logic as in AddExpenseAsync
+            if (expense.Timestamp != DateOnly.FromDateTime(DateTime.Today))
+            {
+                int insertIndex = _expenses.BinarySearch(expense, new ExpenseTimestampComparer());
+                if (insertIndex < 0)
+                {
+                    insertIndex = ~insertIndex;
+                }
+                else
+                {
+                    while (insertIndex > 0 && _expenses[insertIndex - 1].Timestamp == expense.Timestamp)
+                    {
+                        insertIndex--;
+                    }
+                }
+                _expenses.Insert(insertIndex, expense);
+            }
+            else
+            {
+                _expenses.Insert(0, expense);
+            }
+            
+            ExpenseTagPairs.RemoveAll(pair => pair.ExpenseID == expense.ExpenseID);
+            foreach (var tag in tags)
+            {
+                ExpenseTagPairs.Add(new ExpenseTagPair { ExpenseID = expense.ExpenseID.Value, Tag = tag });
+            }
+            
+            mostRecentTimestamp = null;
+            OnExpensesUpdated?.Invoke();
+            return true;
+        }
     }
 
     class ExpenseTimestampComparer : IComparer<Expense>

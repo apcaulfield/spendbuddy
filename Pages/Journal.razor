@@ -175,14 +175,15 @@ else
             tagsAdded = await ExpenseService.AddUserTagsAsync(userID, editableExpense.BrandNewTags);
             editableExpense.BrandNewTags = new();
         }
+
+        // Invalid response recieved when adding new tags
         if (tagsAdded == false){
             return;
         }
 
         // Submit the expense itself
-        var editableExpenseID = await ExpenseService.AddExpenseAsync(editableExpense.Expense, editableExpense.AllTags);
+        bool expenseSuccessfullyUpdated = await ExpenseService.UpdateExpenseAsync(editableExpense.Expense, editableExpense.AllTags);
         editableExpense.InitialTags = editableExpense.AllTags;
-        editableExpense.AllTags = new();
         editableExpense.BrandNewTags = new();
     }
 }
