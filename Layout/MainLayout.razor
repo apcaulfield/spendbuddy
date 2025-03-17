@@ -24,7 +24,7 @@
         
         <div class="mx-3 my-1">
             <label>Name:</label>
-            <InputText @bind-Value="newExpense.Name" class="form-control" />
+            <InputText @bind-Value="newExpense.Name" class="form-control" maxlength="50" />
         </div>
 
         <div class="mx-3 my-1">
@@ -84,6 +84,7 @@
 
     // Notification properties and method
     private string NotificationMessage = "";
+    // Determines appearance of notification
     private string NotificationClass = "";
     
     public async Task ShowNotification(string message, bool isSuccess = true) {
@@ -112,6 +113,23 @@
     }
 
     private async Task SubmitExpense(){
+        var errorMessages = new List<string>();
+        if (newExpense.Amount <= 0){
+            errorMessages.Add("Expense amount must be greater than 0¢.");
+        }
+        if (string.IsNullOrWhiteSpace(newExpense.Name)){
+            errorMessages.Add("Expense name is required.");
+        }
+        if (string.IsNullOrWhiteSpace(newExpense.Category)){
+            errorMessages.Add("Expense category is required.");
+        }
+
+        if (errorMessages.Count > 0){
+            string combinedError = string.Join(" ", errorMessages);
+            await ShowNotification(combinedError, false);
+            return;
+        }
+
         // Submit the category if it's new
         if (!ExpenseService.Categories.Contains(newExpense.Category)){
             await ExpenseService.AddCategoryAsync(userID, newExpense.Category);
@@ -282,6 +300,7 @@
         border-radius: 10px;
         opacity: 0;
         animation: fadeInOut 3s forwards;
+        max-width: 20%;
     }
     .notification.success {
         background-color: darkgreen;
