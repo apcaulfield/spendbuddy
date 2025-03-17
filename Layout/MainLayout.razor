@@ -69,7 +69,7 @@
 
 @if (!string.IsNullOrEmpty(NotificationMessage))
 {
-    <div class="notification">@NotificationMessage</div>
+    <div class="notification @NotificationClass">@NotificationMessage</div>
 }
 
 @code {
@@ -84,12 +84,15 @@
 
     // Notification properties and method
     private string NotificationMessage = "";
+    private string NotificationClass = "";
     
-    public async Task ShowNotification(string message) {
+    public async Task ShowNotification(string message, bool isSuccess = true) {
         NotificationMessage = message;
+        NotificationClass = isSuccess ? "success" : "error";
         StateHasChanged();
         await Task.Delay(3000);
         NotificationMessage = "";
+        NotificationClass = "";
         StateHasChanged();
     }
 
@@ -122,13 +125,13 @@
             BrandNewTags = new();
         }
         if (tagsAdded == false){
-            _ = ShowNotification("An error occurred while trying to add new tags to the database. Expense not submitted.");
+            _ = ShowNotification("An error occurred while trying to add new tags to the database. Expense not submitted.", false);
             return;
         }
 
         // Submit the expense itself
         var newExpenseID = await ExpenseService.AddExpenseAsync(newExpense, AllNewExpenseTags);
-        _ = ShowNotification($"Expense \"{newExpense.Name}\" added!");
+        _ = ShowNotification($"Expense \"{newExpense.Name}\" added!", true);
         AllNewExpenseTags = new();
         newExpense = new Expense { UserID = userID };
     }
@@ -143,12 +146,12 @@
             newTag = Regex.Replace(newTag, @"\s{2,}", " ");
 
             if (!Regex.IsMatch(newTag, "^[a-zA-Z0-9 ]+$")){
-                _ = ShowNotification("Special characters are not allowed in tags.");
+                _ = ShowNotification("Special characters are not allowed in tags.", false);
                 return;
             }
 
             if (AllNewExpenseTags.Add(newTag)){
-                _ = ShowNotification($"Tag \"{newTag}\" applied.");
+                _ = ShowNotification($"Tag \"{newTag}\" applied.", true);
 
                 // Tag did not previously exist
                 if (!ExpenseService.Tags.Contains(newTag)){
@@ -158,11 +161,11 @@
                 newTag = "";
             }
             else{
-                _ = ShowNotification($"Tag \"{newTag}\" has already been applied!");
+                _ = ShowNotification($"Tag \"{newTag}\" has already been applied!", false);
             }
         }
         else{
-            _ = ShowNotification("Tag cannot be empty!");
+            _ = ShowNotification("Tag cannot be empty!", false);
         }
     }
 }
@@ -274,12 +277,17 @@
         position: fixed;
         bottom: 20px;
         right: 20px;
-        background-color: rgba(0, 0, 0, 0.8);
         color: white;
         padding: 15px 20px;
         border-radius: 10px;
         opacity: 0;
         animation: fadeInOut 3s forwards;
+    }
+    .notification.success {
+        background-color: darkgreen;
+    }
+    .notification.error {
+        background-color: red;
     }
     
     @@keyframes fadeInOut {

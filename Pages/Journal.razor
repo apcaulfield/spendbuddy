@@ -198,7 +198,7 @@ else
         // Submit the expense itself
         bool expenseSuccessfullyUpdated = await ExpenseService.UpdateExpenseAsync(editableExpense.Expense, editableExpense.AllTags);
         if (expenseSuccessfullyUpdated){
-            _ = MainLayout.ShowNotification($"\"{editableExpense.Expense.Name}\" ({editableExpense.Expense.Timestamp.ToString("MM/dd/yyyy")}) successfully updated!");
+            _ = MainLayout.ShowNotification($"\"{editableExpense.Expense.Name}\" ({editableExpense.Expense.Timestamp.ToString("MM/dd/yyyy")}) successfully updated!", true);
             CloseModal();
         }
     }
