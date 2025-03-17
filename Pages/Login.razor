@@ -8,7 +8,11 @@
 
 <div class="login-container">
     <img src="logo.png" alt="Logo" />
-    <div class = "login-form">
+    <div class="login-form">
+        <div class="tabs">
+            <button class="tab-button @(activeTab == "login" ? "active" : "")" @onclick='() => activeTab = "login"'>Login</button>
+            <button class="tab-button @(activeTab == "signup" ? "active" : "")" @onclick='() => activeTab = "signup"'>Sign Up</button>
+        </div>
         @if (!string.IsNullOrEmpty(loadingText)){
             <div class="loading-spinner">
                 <div class="spinner"></div>
@@ -16,6 +20,12 @@
             </div>
         }
         else{
+            @if(activeTab == "signup"){
+                <div class="form-group mb-1">
+                    <label>Email (optional)</label>
+                    <InputText class="form-control" @bind-Value="userCredentials.Email" />
+                </div>
+            }
             <div class="form-group mb-1">
                 <label>Username</label>
                 <InputText class="form-control" @bind-Value="userCredentials.Username" />
@@ -26,9 +36,14 @@
                 <InputText type="password" class="form-control" @bind-Value="userCredentials.Password" />
             </div>
 
-            <div class="flex justify-between">
-                <button class="btn btn-primary" @onclick="OnLogin">Login</button>
-                <button class="btn btn-secondary" @onclick="OnSignUp">Sign Up</button>
+            <div style="display: flex; justify-content: center;">
+                @if(activeTab == "login"){
+                    <button class="btn btn-secondary me-1" @onclick="OnResetPassword">Reset Password</button>
+                    <button class="btn btn-primary" @onclick="OnLogin">Login</button>
+                }
+                else if(activeTab == "signup"){
+                    <button class="btn btn-primary" @onclick="OnSignUp">Sign Up</button>
+                }
             </div>
         }
     </div>
@@ -41,6 +56,7 @@
 </div>
 
 @code {
+    private string activeTab = "login";
     private int userID;
     private User userCredentials = new User();
     private string errorMessage = "";
@@ -97,6 +113,12 @@
             loadingText = "";
         }
     }
+
+    // Added Reset Password button handler
+    private void OnResetPassword()
+    {
+        return;
+    }
 }
 
 <style>
@@ -114,6 +136,25 @@
         border-radius: 16px;
         background: white;
         width: 40vw;
+    }
+
+    .tabs {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+
+    .tab-button {
+        flex: 1;
+        padding: 10px;
+        cursor: pointer;
+        background: #eee;
+        border: none;
+        outline: none;
+    }
+
+    .tab-button.active {
+        background: #ddd;
+        font-weight: bold;
     }
 
     .loading-spinner {
@@ -139,5 +180,16 @@
 
     .alert {
         border-radius: 1.5rem !important;
+    }
+
+    .login-form button {
+        min-width: 25%;
+    }
+
+    .tab-button:first-child {
+        border-top-left-radius: 10px;
+    }
+    .tab-button:last-child {
+        border-top-right-radius: 10px;
     }
 </style>
