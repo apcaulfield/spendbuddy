@@ -95,6 +95,12 @@ else
                 <label>Notes:</label>
                 <textarea class="form-control" @bind="editableExpense.Expense.Notes"></textarea>
             </div>
+
+            <div class="mx-3 my-1">
+                <label>Date:</label>
+                <InputDate @bind-Value="editableExpense.Expense.Timestamp" class="form-control" />
+            </div>
+
             <button type="submit" class="btn btn-primary mx-3 mt-2" @onclick="SaveExpense">Save</button>
             <button type="submit" class="btn btn-primary mx-3 my-2" @onclick="CloseModal">Cancel</button>
         </div>
@@ -122,7 +128,16 @@ else
 
     private void OpenEditModal(Expense expense)
     {
-        editableExpense.Expense = expense;
+        editableExpense.Expense = new Expense
+        {
+            UserID = expense.UserID,
+            ExpenseID = expense.ExpenseID,
+            Name = expense.Name,
+            Amount = expense.Amount,
+            Category = expense.Category,
+            Notes = expense.Notes,
+            Timestamp = expense.Timestamp
+        };
         editableExpense.InitialTags = new HashSet<string>(ExpenseService.ExpenseTagPairs
             .Where(pair => pair.ExpenseID == expense.ExpenseID)
             .Select(pair => pair.Tag));
@@ -133,12 +148,9 @@ else
     private void CloseModal()
     {
         showModal = false;
-        editableExpense.InitialTags = new();
-        editableExpense.AllTags = new();
-        editableExpense.BrandNewTags = new();
+        editableExpense = new();
     }
 
-    // Updated to accept the tag from NewTagInput
     private void AddNewTag(string newTag){
         if (!string.IsNullOrWhiteSpace(newTag)){
             // Removes whitespace from beginning and end of string
@@ -183,8 +195,9 @@ else
 
         // Submit the expense itself
         bool expenseSuccessfullyUpdated = await ExpenseService.UpdateExpenseAsync(editableExpense.Expense, editableExpense.AllTags);
-        editableExpense.InitialTags = editableExpense.AllTags;
-        editableExpense.BrandNewTags = new();
+        if (expenseSuccessfullyUpdated){
+            CloseModal();
+        }
     }
 }
 

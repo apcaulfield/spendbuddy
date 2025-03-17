@@ -95,30 +95,7 @@ namespace SpendBuddy.Services
                 ExpenseTagPairs.Add(new ExpenseTagPair {ExpenseID = responseObject.ID, Tag = tag });
             }
             
-            // Perform binary search if adding an expense from a previous day
-            if (expense.Timestamp != DateOnly.FromDateTime(DateTime.Today))
-            {
-                int insertIndex = _expenses.BinarySearch(expense, new ExpenseTimestampComparer());
-                if (insertIndex < 0)
-                {
-                    // If not found, BinarySearch returns (~index), where index is the insertion point.
-                    insertIndex = ~insertIndex;
-                }
-                else
-                {
-                    // If found, move backwards to the lowest index with the same timestamp.
-                    while (insertIndex > 0 && _expenses[insertIndex - 1].Timestamp == expense.Timestamp)
-                    {
-                        insertIndex--;
-                    }
-                }
-                _expenses.Insert(insertIndex, expense);
-            }
-            else{
-                _expenses.Insert(0, expense);
-            }
-
-            mostRecentTimestamp = null;
+            InsertExpense(expense);
 
             // Refresh pages
             OnExpensesUpdated?.Invoke();
@@ -185,17 +162,28 @@ namespace SpendBuddy.Services
             }
 
             ExpenseWithTags expenseToUpdate = new ExpenseWithTags(expense, tags);
-            // Sending PUT request to update the expense; endpoint constructed with ExpenseID
             var response = await _httpClient.PatchAsJsonAsync($"Expense/{expense.ExpenseID}", expenseToUpdate);
 
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception($"Failed to update expense: {response.StatusCode}");
             }
-            
-            // Remove old expense from the list
-            _expenses.RemoveAll(e => e.ExpenseID == expense.ExpenseID);
 
+            _expenses.RemoveAll(e => e.ExpenseID == expense.ExpenseID);
+            InsertExpense(expense);
+
+            ExpenseTagPairs.RemoveAll(pair => pair.ExpenseID == expense.ExpenseID);
+            foreach (var tag in tags)
+            {
+                ExpenseTagPairs.Add(new ExpenseTagPair { ExpenseID = expense.ExpenseID.Value, Tag = tag });
+            }
+
+            OnExpensesUpdated?.Invoke();
+            return true;
+        }
+
+        public void InsertExpense(Expense expense)
+        {
             // Reinsert the updated expense using similar sorting logic as in AddExpenseAsync
             if (expense.Timestamp != DateOnly.FromDateTime(DateTime.Today))
             {
@@ -218,15 +206,7 @@ namespace SpendBuddy.Services
                 _expenses.Insert(0, expense);
             }
             
-            ExpenseTagPairs.RemoveAll(pair => pair.ExpenseID == expense.ExpenseID);
-            foreach (var tag in tags)
-            {
-                ExpenseTagPairs.Add(new ExpenseTagPair { ExpenseID = expense.ExpenseID.Value, Tag = tag });
-            }
-            
             mostRecentTimestamp = null;
-            OnExpensesUpdated?.Invoke();
-            return true;
         }
     }
 
