@@ -211,11 +211,10 @@ else
     }
 
     .journal-tag {
+        color: white;
         display: inline-block;
-        background-color:  #e5e7eb;
         border-radius: 15px;
         padding: 6px 15px;
-        color: black !important;
         text-align: center;
         margin: 2px;
         align-items: center;
@@ -225,8 +224,51 @@ else
         max-width: 250px;
     }
 
+    /* Alternate background colors for tags using rainbow colors */
+    .journal-tag:nth-child(7n+1) {
+       background-color: red !important;
+    }
+    .journal-tag:nth-child(7n+2) {
+       background-color: darkorange !important;
+    }
+    .journal-tag:nth-child(7n+3) {
+       background-color: gold !important;
+       color: black !important;
+    }
+    .journal-tag:nth-child(7n+4) {
+       background-color: green !important;
+       color: white !important;
+    }
+    .journal-tag:nth-child(7n+5) {
+       background-color: blue !important;
+    }
+    .journal-tag:nth-child(7n+6) {
+       background-color: indigo !important;
+    }
+    .journal-tag:nth-child(7n+7) {
+       background-color: violet !important;
+    }
+
     table.table th,
     table.table td {
-    vertical-align: middle;
+        vertical-align: middle;
+    }
+
+    table tbody tr:not(.date-row) {
+        position: relative;
+    }
+    table tbody tr:not(.date-row)::after {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border: 2px solid transparent;
+        pointer-events: none;
+        transition: border-color 0.2s ease;
+    }
+    table tbody tr:not(.date-row):hover::after {
+        border-color: #037ffc;
     }
 </style>

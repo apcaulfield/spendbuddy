@@ -9,7 +9,7 @@
 <div class="login-container">
     <img src="logo.png" alt="Logo" />
     <div class="login-form">
-        <div class="tabs">
+        <div class="tabs" style="@((!string.IsNullOrEmpty(loadingText)) ? "display:none" : null)">
             <button class="tab-button @(activeTab == "login" ? "active" : "")" @onclick='() => activeTab = "login"'>Login</button>
             <button class="tab-button @(activeTab == "signup" ? "active" : "")" @onclick='() => activeTab = "signup"'>Sign Up</button>
         </div>
@@ -27,7 +27,7 @@
                 </div>
             }
             <div class="form-group mb-1">
-                <label>Username</label>
+                <label>Username/Email</label>
                 <InputText class="form-control" @bind-Value="userCredentials.Username" />
             </div>
 

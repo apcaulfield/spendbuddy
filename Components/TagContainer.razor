@@ -23,11 +23,10 @@
     }
 
     .tag-container-item {
-        background: rgba(128, 128, 128, 0.3);
+        color: white;
         backdrop-filter: blur(10px);
         border-radius: 15px; /* Rounded corners */
         padding: 6px 15px;
-        color: black; /* Black text */
         width: auto;
         text-align: center;
         margin: 2px;
@@ -38,7 +37,35 @@
         max-width: 250px;
     }
 
+    .tag-container-item:nth-child(7n+1) {
+       background-color: red !important;
+    }
+    .tag-container-item:nth-child(7n+2) {
+       background-color: darkorange !important;
+    }
+    .tag-container-item:nth-child(7n+3) {
+       background-color: #edcc0e !important;
+       color: black !important;
+    }
+    .tag-container-item:nth-child(7n+4) {
+       background-color: green !important;
+    }
+    .tag-container-item:nth-child(7n+5) {
+       background-color: blue !important;
+    }
+    .tag-container-item:nth-child(7n+6) {
+       background-color: indigo !important;
+    }
+    .tag-container-item:nth-child(7n+7) {
+       background-color: violet !important;
+    }
+
     .tag-container-item .btn-close {
         margin-left: 8px;
+        filter: invert(1);
+    }
+
+    .tag-container-item:nth-child(7n+3) .btn-close {
+        filter: none;
     }
 </style>
