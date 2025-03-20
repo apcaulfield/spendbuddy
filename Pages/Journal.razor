@@ -67,12 +67,10 @@ else
 {
     <div class="modal-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center;" @onclick="CloseModal">
         <div class="modal-content" @onclick:stopPropagation style="background:white; padding:20px; max-width:500px; align-items: center;">
-            <h3>Edit Expense</h3>
             <div class="mx-3 my-1">
-                <label>Name:</label>
-                <InputText @bind-Value="editableExpense.Expense.Name" class="form-control" />
+                <InputText @bind-Value="editableExpense.Expense.Name" class="form-control" style="border:none; width:100%; font-size:1.5rem; text-align:center;" />
             </div>
-             <div class="mx-3 my-1">
+            <div class="mx-3 my-1">
                 <label>Amount:</label>
                     <div class="input-group">
                     <span class="input-group-text">$</span>
