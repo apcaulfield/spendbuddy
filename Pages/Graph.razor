@@ -10,12 +10,12 @@
 	double svgWidth = 720, svgHeight = 360;
 	double chartWidth = svgWidth - marginLeft - marginRight;
 	double chartHeight = svgHeight - marginTop - marginBottom;
-	int n = expenses.Count;
-	double maxAmount = (expenses.Any() && expenses.Max(e => e.Amount) > 0) ? (double)expenses.Max(e => e.Amount) : 1;
+	int n = ExpenseService.Expenses.Count;
+	double maxAmount = (ExpenseService.Expenses.Any() && ExpenseService.Expenses.Max(e => e.Amount) > 0) ? (double)ExpenseService.Expenses.Max(e => e.Amount) : 1;
 	var points = new List<string>();
 	var circles = new List<(double x, double y, string name, decimal amount, double textWidth)>();
 	for (var i = 0; i < n; i++){
-		var expense = expenses[i];
+		var expense = ExpenseService.Expenses[i];
 		double x = marginLeft + (n > 1 ? i * (chartWidth / (n - 1)) : chartWidth / 2);
 		double y = marginTop + chartHeight * (1 - (Convert.ToDouble(expense.Amount) / Convert.ToDouble(maxAmount)));
 		points.Add($"{x},{y}");
@@ -34,9 +34,9 @@
     }
     int xTickCount = 4;
     var xTicks = new List<(double x, string label)>();
-    if(expenses.Any()){
-        var minDate = expenses.Min(e => e.Timestamp);
-        var maxDate = expenses.Max(e => e.Timestamp);
+    if(ExpenseService.Expenses.Any()){
+        var minDate = ExpenseService.Expenses.Min(e => e.Timestamp);
+        var maxDate = ExpenseService.Expenses.Max(e => e.Timestamp);
         double totalDays = (maxDate.ToDateTime(TimeOnly.MinValue) - minDate.ToDateTime(TimeOnly.MinValue)).TotalDays;
         for (int i = 0; i <= xTickCount; i++){
             double frac = (double)i / xTickCount;
@@ -146,7 +146,6 @@
 
 @code{
 	private int userID;
-	private List<Expense> expenses = new();
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -154,8 +153,9 @@
 		if (userID == 0){
 			throw new InvalidOperationException("Tried accessing journal without a User ID.");
 		}
-		// Fetch expenses for the graph
-		await ExpenseService.FetchPageOfExpensesAsync(userID);
-		expenses = ExpenseService.Expenses.ToList();
+        
+		/* Fetch expenses for the graph. 
+        This is unneccessary as they will already be fetched in the journal. */
+		// await ExpenseService.FetchPageOfExpensesAsync(userID);
 	}
 }
