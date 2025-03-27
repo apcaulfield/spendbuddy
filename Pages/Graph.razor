@@ -10,20 +10,59 @@
 	double svgWidth = 720, svgHeight = 360;
 	double chartWidth = svgWidth - marginLeft - marginRight;
 	double chartHeight = svgHeight - marginTop - marginBottom;
-	int n = ExpenseService.Expenses.Count;
-	double maxAmount = (ExpenseService.Expenses.Any() && ExpenseService.Expenses.Max(e => e.Amount) > 0) ? (double)ExpenseService.Expenses.Max(e => e.Amount) : 1;
-	var points = new List<string>();
-	var circles = new List<(double x, double y, string name, decimal amount, double textWidth)>();
-	for (var i = 0; i < n; i++){
-		var expense = ExpenseService.Expenses[i];
-		double x = marginLeft + (n > 1 ? i * (chartWidth / (n - 1)) : chartWidth / 2);
-		double y = marginTop + chartHeight * (1 - (Convert.ToDouble(expense.Amount) / Convert.ToDouble(maxAmount)));
-		points.Add($"{x},{y}");
-		string tooltipText = $"{expense.Name}: ${expense.Amount:F2}";
-		double textWidth = tooltipText.Length * 5.5; // Approximate width based on font size
-		circles.Add((x, y, expense.Name, expense.Amount, textWidth));
+
+	// Include past 28 days, including days with $0 worth of expenses
+	var endDate = DateTime.Today;
+	var startDate = endDate.AddDays(-27);
+
+	// Group expenses to a single point
+	var expenseGroups = ExpenseService.Expenses
+	    .Where(e => {
+			var dt = e.Timestamp.ToDateTime(TimeOnly.MinValue).Date;
+			return dt >= startDate && dt <= endDate;
+		})
+	    .GroupBy(e => e.Timestamp.ToDateTime(TimeOnly.MinValue).Date)
+	    .ToDictionary(g => g.Key, g => g.Select(exp => new { exp.Name, exp.Amount }).ToList());
+	var dailyExpenses = new List<dynamic>();
+	for (var date = startDate; date <= endDate; date = date.AddDays(1))
+	{
+	    if(expenseGroups.ContainsKey(date))
+	    {
+	        var info = expenseGroups[date];
+	        // Place each expense in the tooltip on a newline
+	        var tooltipText = string.Join("\n", info.Select(exp => $"{exp.Name}: ${exp.Amount:F2}"));
+	        dailyExpenses.Add(new { Date = date, TotalAmount = info.Sum(exp => exp.Amount), Tooltip = tooltipText });
+	    }
+	    else
+	    {
+	        dailyExpenses.Add(new { Date = date, TotalAmount = 0.0, Tooltip = "" });
+	    }
 	}
-	var polylinePoints = string.Join(" ", points);
+	
+	int numPoints = dailyExpenses.Count;
+	double maxAmount = dailyExpenses.Any(x => (double)x.TotalAmount > 0)
+		? dailyExpenses.Max(x => (double)x.TotalAmount)
+		: 1;
+
+    var points = new List<string>();
+    // lineCount computes tooltip dimensions
+    var circles = new List<(double x, double y, string tooltip, double totalAmount, double textWidth, int lineCount)>();
+    for (var i = 0; i < numPoints; i++){
+        var daily = dailyExpenses[i];
+        double x = marginLeft + (numPoints > 1 ? i * (chartWidth / (numPoints - 1)) : chartWidth / 2);
+        double y = marginTop + chartHeight * (1 - ((double)daily.TotalAmount / maxAmount));
+        points.Add($"{x},{y}");
+        string tooltipText = daily.Tooltip;
+        double textWidth = 0;
+        int lineCount = 0;
+        if(!string.IsNullOrEmpty(tooltipText)) {
+	        var lines = tooltipText.Split('\n');
+	        textWidth = lines.Max(l => l.Length) * 5.5;
+            lineCount = lines.Length;
+	    }
+	    circles.Add((x, y, tooltipText, (double)daily.TotalAmount, textWidth, lineCount));
+    }
+    var polylinePoints = string.Join(" ", points);
 
     int yTickCount = 5;
     var yTicks = new List<(double y, double val)>();
@@ -32,18 +71,12 @@
         double yPos = marginTop + chartHeight * (1 - (i / (double)yTickCount));
         yTicks.Add((yPos, value));
     }
-    int xTickCount = 4;
+
+    // Create x-axis ticks
     var xTicks = new List<(double x, string label)>();
-    if(ExpenseService.Expenses.Any()){
-        var minDate = ExpenseService.Expenses.Min(e => e.Timestamp);
-        var maxDate = ExpenseService.Expenses.Max(e => e.Timestamp);
-        double totalDays = (maxDate.ToDateTime(TimeOnly.MinValue) - minDate.ToDateTime(TimeOnly.MinValue)).TotalDays;
-        for (int i = 0; i <= xTickCount; i++){
-            double frac = (double)i / xTickCount;
-            double xPos = marginLeft + chartWidth * frac;
-            var tickDate = totalDays == 0 ? minDate : minDate.AddDays((int)Math.Round(totalDays * frac));
-            xTicks.Add((xPos, tickDate.ToShortDateString()));
-        }
+    for (int i = 0; i < numPoints; i++){
+        double xPos = marginLeft + (numPoints > 1 ? i * (chartWidth / (numPoints - 1)) : chartWidth / 2);
+        xTicks.Add((xPos, dailyExpenses[i].Date.ToString("M/d")));
     }
 }
 
@@ -69,7 +102,7 @@
     {
         <line x1="@((int)x)" y1="@((int)(marginTop + chartHeight))" 
               x2="@((int)x)" y2="@((int)(marginTop + chartHeight + 5))" stroke="black" />
-        <svg:text x="@((int)x)" y="@((int)(marginTop + chartHeight + 15))" text-anchor="middle" font-size="10">
+        <svg:text x="@((int)x)" y="@((int)(marginTop + chartHeight + 15))" text-anchor="middle" font-size="8">
             @label
         </svg:text>
     }
@@ -84,18 +117,37 @@
 	<polyline points="@polylinePoints" fill="none" stroke="#4CAF50" stroke-width="2" />
 	
 	<!-- Draw circular data points with tooltips -->
-	@foreach(var (x, y, name, amount, textWidth) in circles)
+	@foreach(var (x, y, tooltip, totalAmount, textWidth, lineCount) in circles)
 	{
 		<g class="data-point" onmouseover="this.parentNode.appendChild(this)">
 			<circle cx="@x" cy="@y" r="4" fill="#4CAF50" />
-			<g class="tooltip-container" visibility="hidden">
-				<rect class="tooltip-bg" x="@(x + 5)" y="@(y - 22)" rx="4" ry="4"
-					  width="@( (textWidth + 12) * 0.85)" height="16" fill="rgba(0,0,0,0.8)" />
-				<text class="tooltip-text" x="@(x + 5 + ((textWidth + 12) * 0.85)/2)" y="@(y - 14)" 
-					  fill="white" font-size="9px" text-anchor="middle">
-					@name: $@amount.ToString("F2")
-				</text>
-			</g>
+			@if (!string.IsNullOrEmpty(tooltip))
+			{
+				var lineHeight = 15;
+				var padding = 4; // added padding for top and bottom
+				var tooltipHeight = (lineCount * lineHeight) + (2 * padding);
+                
+				<g class="tooltip-container" visibility="hidden">
+					<rect class="tooltip-bg" x="@(x + 5)" y="@(y - tooltipHeight)" 
+						  rx="4" ry="4" width="@( (textWidth + 12) * 0.85)" height="@tooltipHeight" fill="rgba(0,0,0,0.8)" />
+					<text class="tooltip-text" x="@(x + 5 + ((textWidth + 12) * 0.85)/2)" 
+						  y="@(y - tooltipHeight/2)" fill="white" font-size="9px" text-anchor="middle" dominant-baseline="middle">
+						@{ bool first = true; }
+						@foreach (var line in tooltip.Split('\n'))
+						{
+							if(first)
+							{
+								<tspan x="@(x + 5 + ((textWidth + 12) * 0.85)/2)" dy="-@((lineCount - 1) * lineHeight / 2)">@line</tspan>
+                                { first = false; }
+							}
+							else
+							{
+								<tspan x="@(x + 5 + ((textWidth + 12) * 0.85)/2)" dy="@lineHeight">@line</tspan>
+							}
+						}
+					</text>
+				</g>
+			}
 		</g>
 	}
 </svg>
