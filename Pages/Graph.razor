@@ -29,8 +29,16 @@
 	    if(expenseGroups.ContainsKey(date))
 	    {
 	        var info = expenseGroups[date];
-	        // Place each expense in the tooltip on a newline
-	        var tooltipText = string.Join("\n", info.Select(exp => $"{exp.Name}: ${exp.Amount:F2}"));
+	        var expenses = info.Select(exp => $"{exp.Name}: ${exp.Amount:F2}").ToList();
+	        string tooltipText;
+	        if (expenses.Count <= 3)
+	        {
+	            tooltipText = string.Join("\n", expenses);
+	        }
+	        else
+	        {
+	            tooltipText = string.Join("\n", expenses.Take(3)) + $"\n{expenses.Count - 3} more...";
+	        }
 	        dailyExpenses.Add(new { Date = date, TotalAmount = info.Sum(exp => exp.Amount), Tooltip = tooltipText });
 	    }
 	    else
@@ -126,26 +134,26 @@
 				var lineHeight = 15;
 				var padding = 4; // added padding for top and bottom
 				var tooltipHeight = (lineCount * lineHeight) + (2 * padding);
-                
+				var tooltipWidth = (textWidth + 12) * 0.85;
+				var tooltipX = x + 5;
+				var tooltipY = y - tooltipHeight;
+				if (tooltipX + tooltipWidth > svgWidth - marginRight)
+				{
+					tooltipX = x - tooltipWidth - 5;
+				}
+				if (tooltipY < marginTop)
+				{
+					tooltipY = y + 5;
+				}
 				<g class="tooltip-container" visibility="hidden">
-					<rect class="tooltip-bg" x="@(x + 5)" y="@(y - tooltipHeight)" 
-						  rx="4" ry="4" width="@( (textWidth + 12) * 0.85)" height="@tooltipHeight" fill="rgba(0,0,0,0.8)" />
-					<text class="tooltip-text" x="@(x + 5 + ((textWidth + 12) * 0.85)/2)" 
-						  y="@(y - tooltipHeight/2)" fill="white" font-size="9px" text-anchor="middle" dominant-baseline="middle">
-						@{ bool first = true; }
-						@foreach (var line in tooltip.Split('\n'))
-						{
-							if(first)
-							{
-								<tspan x="@(x + 5 + ((textWidth + 12) * 0.85)/2)" dy="-@((lineCount - 1) * lineHeight / 2)">@line</tspan>
-                                { first = false; }
-							}
-							else
-							{
-								<tspan x="@(x + 5 + ((textWidth + 12) * 0.85)/2)" dy="@lineHeight">@line</tspan>
-							}
-						}
-					</text>
+					<rect class="tooltip-bg" x="@tooltipX" y="@tooltipY" 
+						  rx="4" ry="4" width="@tooltipWidth" height="@tooltipHeight" fill="rgba(0,0,0,0.8)" />
+					<foreignObject x="@tooltipX" y="@tooltipY" width="@tooltipWidth" height="@tooltipHeight">
+						<div xmlns="http://www.w3.org/1999/xhtml"
+						     style="display: flex; flex-direction: column; justify-content: center; align-items: center; width:100%; height:100%; text-align:center; color:white; font-size:9px; line-height:15px;">
+							@((MarkupString)string.Join("", tooltip.Split('\n').Select(l => $"<span style='display:block; padding:0;'>{(l.Trim().EndsWith("more...") ? $"<i>{l}</i>" : l)}</span>")))
+						</div>
+					</foreignObject>
 				</g>
 			}
 		</g>
